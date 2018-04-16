@@ -19,11 +19,11 @@ limitations under the License.
 package fake
 
 import (
+	onionv1alpha1 "github.com/kragniz/kube-onion/pkg/apis/onion/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	samplecontrollerv1alpha1 "k8s.io/sample-controller/pkg/apis/samplecontroller/v1alpha1"
 )
 
 var scheme = runtime.NewScheme()
@@ -50,5 +50,5 @@ func init() {
 // After this, RawExtensions in Kubernetes types will serialize kube-aggregator types
 // correctly.
 func AddToScheme(scheme *runtime.Scheme) {
-	samplecontrollerv1alpha1.AddToScheme(scheme)
+	onionv1alpha1.AddToScheme(scheme)
 }

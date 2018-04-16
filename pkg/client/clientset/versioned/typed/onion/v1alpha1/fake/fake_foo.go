@@ -19,24 +19,24 @@ limitations under the License.
 package fake
 
 import (
+	v1alpha1 "github.com/kragniz/kube-onion/pkg/apis/onion/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
-	v1alpha1 "k8s.io/sample-controller/pkg/apis/samplecontroller/v1alpha1"
 )
 
 // FakeFoos implements FooInterface
 type FakeFoos struct {
-	Fake *FakeSamplecontrollerV1alpha1
+	Fake *FakeOnionV1alpha1
 	ns   string
 }
 
-var foosResource = schema.GroupVersionResource{Group: "samplecontroller.k8s.io", Version: "v1alpha1", Resource: "foos"}
+var foosResource = schema.GroupVersionResource{Group: "onion.kragniz.eu", Version: "v1alpha1", Resource: "foos"}
 
-var foosKind = schema.GroupVersionKind{Group: "samplecontroller.k8s.io", Version: "v1alpha1", Kind: "Foo"}
+var foosKind = schema.GroupVersionKind{Group: "onion.kragniz.eu", Version: "v1alpha1", Kind: "Foo"}
 
 // Get takes name of the foo, and returns the corresponding foo object, and an error if there is any.
 func (c *FakeFoos) Get(name string, options v1.GetOptions) (result *v1alpha1.Foo, err error) {
