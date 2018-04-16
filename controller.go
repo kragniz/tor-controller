@@ -39,12 +39,12 @@ import (
 
 	onionv1alpha1 "github.com/kragniz/kube-onion/pkg/apis/onion/v1alpha1"
 	clientset "github.com/kragniz/kube-onion/pkg/client/clientset/versioned"
-	samplescheme "github.com/kragniz/kube-onion/pkg/client/clientset/versioned/scheme"
+	onionscheme "github.com/kragniz/kube-onion/pkg/client/clientset/versioned/scheme"
 	informers "github.com/kragniz/kube-onion/pkg/client/informers/externalversions"
 	listers "github.com/kragniz/kube-onion/pkg/client/listers/onion/v1alpha1"
 )
 
-const controllerAgentName = "sample-controller"
+const controllerAgentName = "onion-controller"
 
 const (
 	// SuccessSynced is used as part of the Event 'reason' when a OnionService is synced
@@ -65,8 +65,8 @@ const (
 type Controller struct {
 	// kubeclientset is a standard kubernetes clientset
 	kubeclientset kubernetes.Interface
-	// sampleclientset is a clientset for our own API group
-	sampleclientset clientset.Interface
+	// onionclientset is a clientset for our own API group
+	onionclientset clientset.Interface
 
 	deploymentsLister   appslisters.DeploymentLister
 	deploymentsSynced   cache.InformerSynced
@@ -84,22 +84,22 @@ type Controller struct {
 	recorder record.EventRecorder
 }
 
-// NewController returns a new sample controller
+// NewController returns a new onion controller
 func NewController(
 	kubeclientset kubernetes.Interface,
-	sampleclientset clientset.Interface,
+	onionclientset clientset.Interface,
 	kubeInformerFactory kubeinformers.SharedInformerFactory,
-	sampleInformerFactory informers.SharedInformerFactory) *Controller {
+	onionInformerFactory informers.SharedInformerFactory) *Controller {
 
 	// obtain references to shared index informers for the Deployment and OnionService
 	// types.
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
-	onionServiceInformer := sampleInformerFactory.Samplecontroller().V1alpha1().OnionServices()
+	onionServiceInformer := onionInformerFactory.Onion().V1alpha1().OnionServices()
 
 	// Create event broadcaster
-	// Add sample-controller types to the default Kubernetes Scheme so Events can be
-	// logged for sample-controller types.
-	samplescheme.AddToScheme(scheme.Scheme)
+	// Add onion-controller types to the default Kubernetes Scheme so Events can be
+	// logged for onion-controller types.
+	onionscheme.AddToScheme(scheme.Scheme)
 	glog.V(4).Info("Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
@@ -108,7 +108,7 @@ func NewController(
 
 	controller := &Controller{
 		kubeclientset:       kubeclientset,
-		sampleclientset:     sampleclientset,
+		onionclientset:      onionclientset,
 		deploymentsLister:   deploymentInformer.Lister(),
 		deploymentsSynced:   deploymentInformer.Informer().HasSynced,
 		onionServicesLister: onionServiceInformer.Lister(),
@@ -331,7 +331,7 @@ func (c *Controller) updateOnionServiceStatus(onionService *onionv1alpha1.OnionS
 	// we must use Update instead of UpdateStatus to update the Status block of the OnionService resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
 	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err := c.sampleclientset.SamplecontrollerV1alpha1().OnionServices(onionService.Namespace).Update(onionServiceCopy)
+	_, err := c.onionclientset.OnionV1alpha1().OnionServices(onionService.Namespace).Update(onionServiceCopy)
 	return err
 }
 
