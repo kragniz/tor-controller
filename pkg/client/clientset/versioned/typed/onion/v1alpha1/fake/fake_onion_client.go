@@ -28,8 +28,8 @@ type FakeOnionV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeOnionV1alpha1) Foos(namespace string) v1alpha1.FooInterface {
-	return &FakeFoos{c, namespace}
+func (c *FakeOnionV1alpha1) OnionServices(namespace string) v1alpha1.OnionServiceInterface {
+	return &FakeOnionServices{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

@@ -27,7 +27,7 @@ import (
 
 type OnionV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	FoosGetter
+	OnionServicesGetter
 }
 
 // OnionV1alpha1Client is used to interact with features provided by the onion.kragniz.eu group.
@@ -35,8 +35,8 @@ type OnionV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *OnionV1alpha1Client) Foos(namespace string) FooInterface {
-	return newFoos(c, namespace)
+func (c *OnionV1alpha1Client) OnionServices(namespace string) OnionServiceInterface {
+	return newOnionServices(c, namespace)
 }
 
 // NewForConfig creates a new OnionV1alpha1Client for the given config.

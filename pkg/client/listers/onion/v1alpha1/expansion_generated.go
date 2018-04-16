@@ -18,10 +18,10 @@ limitations under the License.
 
 package v1alpha1
 
-// FooListerExpansion allows custom methods to be added to
-// FooLister.
-type FooListerExpansion interface{}
+// OnionServiceListerExpansion allows custom methods to be added to
+// OnionServiceLister.
+type OnionServiceListerExpansion interface{}
 
-// FooNamespaceListerExpansion allows custom methods to be added to
-// FooNamespaceLister.
-type FooNamespaceListerExpansion interface{}
+// OnionServiceNamespaceListerExpansion allows custom methods to be added to
+// OnionServiceNamespaceLister.
+type OnionServiceNamespaceListerExpansion interface{}
