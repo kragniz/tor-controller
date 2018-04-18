@@ -25,7 +25,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	kubeinformers "k8s.io/client-go/informers"
@@ -264,55 +263,9 @@ func (c *Controller) syncHandler(key string) error {
 		return err
 	}
 
-	deploymentName := onionService.Spec.DeploymentName
-	if deploymentName == "" {
-		// We choose to absorb the error here as the worker would requeue the
-		// resource otherwise. Instead, the next time the resource is updated
-		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("%s: deployment name must be specified", key))
-		return nil
-	}
-
-	// Get the deployment with the name specified in OnionService.spec
-	deployment, err := c.deploymentsLister.Deployments(onionService.Namespace).Get(deploymentName)
-	// If the resource doesn't exist, we'll create it
-	if errors.IsNotFound(err) {
-		deployment, err = c.kubeclientset.AppsV1().Deployments(onionService.Namespace).Create(newDeployment(onionService))
-	}
-
-	// If an error occurs during Get/Create, we'll requeue the item so we can
-	// attempt processing again later. This could have been caused by a
-	// temporary network failure, or any other transient reason.
-	if err != nil {
-		return err
-	}
-
-	// If the Deployment is not controlled by this OnionService resource, we should log
-	// a warning to the event recorder and ret
-	if !metav1.IsControlledBy(deployment, onionService) {
-		msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
-		c.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		return fmt.Errorf(msg)
-	}
-
-	// If this number of the replicas on the OnionService resource is specified, and the
-	// number does not equal the current desired replicas on the Deployment, we
-	// should update the Deployment resource.
-	if onionService.Spec.Replicas != nil && *onionService.Spec.Replicas != *deployment.Spec.Replicas {
-		glog.V(4).Infof("OnionService %s replicas: %d, deployment replicas: %d", name, *onionService.Spec.Replicas, *deployment.Spec.Replicas)
-		deployment, err = c.kubeclientset.AppsV1().Deployments(onionService.Namespace).Update(newDeployment(onionService))
-	}
-
-	// If an error occurs during Update, we'll requeue the item so we can
-	// attempt processing again later. THis could have been caused by a
-	// temporary network failure, or any other transient reason.
-	if err != nil {
-		return err
-	}
-
 	// Finally, we update the status block of the OnionService resource to reflect the
 	// current state of the world
-	err = c.updateOnionServiceStatus(onionService, deployment)
+	err = c.updateOnionServiceStatus(onionService)
 	if err != nil {
 		return err
 	}
@@ -321,12 +274,12 @@ func (c *Controller) syncHandler(key string) error {
 	return nil
 }
 
-func (c *Controller) updateOnionServiceStatus(onionService *onionv1alpha1.OnionService, deployment *appsv1.Deployment) error {
+func (c *Controller) updateOnionServiceStatus(onionService *onionv1alpha1.OnionService) error {
 	// NEVER modify objects from the store. It's a read-only, local cache.
 	// You can use DeepCopy() to make a deep copy of original object and modify this copy
 	// Or create a copy manually for better performance
 	onionServiceCopy := onionService.DeepCopy()
-	onionServiceCopy.Status.AvailableReplicas = deployment.Status.AvailableReplicas
+
 	// If the CustomResourceSubresources feature gate is not enabled,
 	// we must use Update instead of UpdateStatus to update the Status block of the OnionService resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
@@ -385,47 +338,5 @@ func (c *Controller) handleObject(obj interface{}) {
 
 		c.enqueueOnionService(onionService)
 		return
-	}
-}
-
-// newDeployment creates a new Deployment for a OnionService resource. It also sets
-// the appropriate OwnerReferences on the resource so handleObject can discover
-// the OnionService resource that 'owns' it.
-func newDeployment(onionService *onionv1alpha1.OnionService) *appsv1.Deployment {
-	labels := map[string]string{
-		"app":        "nginx",
-		"controller": onionService.Name,
-	}
-	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      onionService.Spec.DeploymentName,
-			Namespace: onionService.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(onionService, schema.GroupVersionKind{
-					Group:   onionv1alpha1.SchemeGroupVersion.Group,
-					Version: onionv1alpha1.SchemeGroupVersion.Version,
-					Kind:    "OnionService",
-				}),
-			},
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: onionService.Spec.Replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "nginx",
-							Image: "nginx:latest",
-						},
-					},
-				},
-			},
-		},
 	}
 }

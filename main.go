@@ -59,7 +59,7 @@ func main() {
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	onionInformerFactory := informers.NewSharedInformerFactory(onionClient, time.Second*30)
 
-	controller := NewController(kubeClient, onionClient, kubeInformerFactory, exampleInformerFactory)
+	controller := NewController(kubeClient, onionClient, kubeInformerFactory, onionInformerFactory)
 
 	go kubeInformerFactory.Start(stopCh)
 	go onionInformerFactory.Start(stopCh)
