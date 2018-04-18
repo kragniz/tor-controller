@@ -12,3 +12,5 @@ kube-onion: Makefile main.go
 vendor: Gopkg.toml
 	dep ensure
 
+generate:
+	./hack/update-codegen.sh
