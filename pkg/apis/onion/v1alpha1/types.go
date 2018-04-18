@@ -35,6 +35,10 @@ type OnionService struct {
 
 // OnionServiceSpec is the spec for a OnionService resource
 type OnionServiceSpec struct {
+	Service OnionServiceBackend `json:"service"`
+}
+
+type OnionServiceBackend struct {
 	// Specifies the name of the referenced service.
 	ServiceName string `json:"serviceName""`
 
