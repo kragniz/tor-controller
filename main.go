@@ -27,6 +27,7 @@ import (
 
 	clientset "github.com/kragniz/kube-onion/pkg/client/clientset/versioned"
 	informers "github.com/kragniz/kube-onion/pkg/client/informers/externalversions"
+	"github.com/kragniz/kube-onion/pkg/controller"
 	"github.com/kragniz/kube-onion/pkg/signals"
 )
 
@@ -59,7 +60,7 @@ func main() {
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	onionInformerFactory := informers.NewSharedInformerFactory(onionClient, time.Second*30)
 
-	controller := NewController(kubeClient, onionClient, kubeInformerFactory, onionInformerFactory)
+	controller := controller.NewController(kubeClient, onionClient, kubeInformerFactory, onionInformerFactory)
 
 	go kubeInformerFactory.Start(stopCh)
 	go onionInformerFactory.Start(stopCh)
