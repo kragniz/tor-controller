@@ -19,7 +19,7 @@ limitations under the License.
 package scheme
 
 import (
-	onionv1alpha1 "github.com/kragniz/kube-onion/pkg/apis/onion/v1alpha1"
+	onionv1alpha1 "github.com/kragniz/kube-onions/pkg/apis/onion/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

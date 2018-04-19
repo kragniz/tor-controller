@@ -36,11 +36,11 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 
-	onionv1alpha1 "github.com/kragniz/kube-onion/pkg/apis/onion/v1alpha1"
-	clientset "github.com/kragniz/kube-onion/pkg/client/clientset/versioned"
-	onionscheme "github.com/kragniz/kube-onion/pkg/client/clientset/versioned/scheme"
-	informers "github.com/kragniz/kube-onion/pkg/client/informers/externalversions"
-	listers "github.com/kragniz/kube-onion/pkg/client/listers/onion/v1alpha1"
+	onionv1alpha1 "github.com/kragniz/kube-onions/pkg/apis/onion/v1alpha1"
+	clientset "github.com/kragniz/kube-onions/pkg/client/clientset/versioned"
+	onionscheme "github.com/kragniz/kube-onions/pkg/client/clientset/versioned/scheme"
+	informers "github.com/kragniz/kube-onions/pkg/client/informers/externalversions"
+	listers "github.com/kragniz/kube-onions/pkg/client/listers/onion/v1alpha1"
 )
 
 const controllerAgentName = "onion-controller"

@@ -25,10 +25,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
-	clientset "github.com/kragniz/kube-onion/pkg/client/clientset/versioned"
-	informers "github.com/kragniz/kube-onion/pkg/client/informers/externalversions"
-	"github.com/kragniz/kube-onion/pkg/controller"
-	"github.com/kragniz/kube-onion/pkg/signals"
+	clientset "github.com/kragniz/kube-onions/pkg/client/clientset/versioned"
+	informers "github.com/kragniz/kube-onions/pkg/client/informers/externalversions"
+	"github.com/kragniz/kube-onions/pkg/controller"
+	"github.com/kragniz/kube-onions/pkg/signals"
 )
 
 var (

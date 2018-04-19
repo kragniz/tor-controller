@@ -21,10 +21,10 @@ package v1alpha1
 import (
 	time "time"
 
-	onion_v1alpha1 "github.com/kragniz/kube-onion/pkg/apis/onion/v1alpha1"
-	versioned "github.com/kragniz/kube-onion/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/kragniz/kube-onion/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/kragniz/kube-onion/pkg/client/listers/onion/v1alpha1"
+	onion_v1alpha1 "github.com/kragniz/kube-onions/pkg/apis/onion/v1alpha1"
+	versioned "github.com/kragniz/kube-onions/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/kragniz/kube-onions/pkg/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/kragniz/kube-onions/pkg/client/listers/onion/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

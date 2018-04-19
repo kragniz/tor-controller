@@ -19,7 +19,7 @@ limitations under the License.
 package versioned
 
 import (
-	onionv1alpha1 "github.com/kragniz/kube-onion/pkg/client/clientset/versioned/typed/onion/v1alpha1"
+	onionv1alpha1 "github.com/kragniz/kube-onions/pkg/client/clientset/versioned/typed/onion/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

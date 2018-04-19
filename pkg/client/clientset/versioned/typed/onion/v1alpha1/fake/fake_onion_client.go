@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/kragniz/kube-onion/pkg/client/clientset/versioned/typed/onion/v1alpha1"
+	v1alpha1 "github.com/kragniz/kube-onions/pkg/client/clientset/versioned/typed/onion/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

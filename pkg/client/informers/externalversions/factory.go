@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/kragniz/kube-onion/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/kragniz/kube-onion/pkg/client/informers/externalversions/internalinterfaces"
-	onion "github.com/kragniz/kube-onion/pkg/client/informers/externalversions/onion"
+	versioned "github.com/kragniz/kube-onions/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/kragniz/kube-onions/pkg/client/informers/externalversions/internalinterfaces"
+	onion "github.com/kragniz/kube-onions/pkg/client/informers/externalversions/onion"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

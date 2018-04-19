@@ -19,8 +19,8 @@ limitations under the License.
 package onion
 
 import (
-	internalinterfaces "github.com/kragniz/kube-onion/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/kragniz/kube-onion/pkg/client/informers/externalversions/onion/v1alpha1"
+	internalinterfaces "github.com/kragniz/kube-onions/pkg/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/kragniz/kube-onions/pkg/client/informers/externalversions/onion/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.

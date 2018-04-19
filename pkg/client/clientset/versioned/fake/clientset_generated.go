@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/kragniz/kube-onion/pkg/client/clientset/versioned"
-	onionv1alpha1 "github.com/kragniz/kube-onion/pkg/client/clientset/versioned/typed/onion/v1alpha1"
-	fakeonionv1alpha1 "github.com/kragniz/kube-onion/pkg/client/clientset/versioned/typed/onion/v1alpha1/fake"
+	clientset "github.com/kragniz/kube-onions/pkg/client/clientset/versioned"
+	onionv1alpha1 "github.com/kragniz/kube-onions/pkg/client/clientset/versioned/typed/onion/v1alpha1"
+	fakeonionv1alpha1 "github.com/kragniz/kube-onions/pkg/client/clientset/versioned/typed/onion/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	onion "github.com/kragniz/kube-onion/pkg/apis/onion"
+	onion "github.com/kragniz/kube-onions/pkg/apis/onion"
 )
 
 // SchemeGroupVersion is group version used to register these objects
