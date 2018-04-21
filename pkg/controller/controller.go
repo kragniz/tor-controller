@@ -20,7 +20,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -99,9 +100,9 @@ func NewController(
 	// Add onion-controller types to the default Kubernetes Scheme so Events can be
 	// logged for onion-controller types.
 	onionscheme.AddToScheme(scheme.Scheme)
-	glog.V(4).Info("Creating event broadcaster")
+	log.Info("Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(glog.Infof)
+	eventBroadcaster.StartLogging(log.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 
@@ -116,7 +117,7 @@ func NewController(
 		recorder:            recorder,
 	}
 
-	glog.Info("Setting up event handlers")
+	log.Info("Setting up event handlers")
 	// Set up an event handler for when OnionService resources change
 	onionServiceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.enqueueOnionService,
@@ -157,23 +158,23 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) error {
 	defer c.workqueue.ShutDown()
 
 	// Start the informer factories to begin populating the informer caches
-	glog.Info("Starting OnionService controller")
+	log.Info("Starting OnionService controller")
 
 	// Wait for the caches to be synced before starting workers
-	glog.Info("Waiting for informer caches to sync")
+	log.Info("Waiting for informer caches to sync")
 	if ok := cache.WaitForCacheSync(stopCh, c.deploymentsSynced, c.onionServicesSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
-	glog.Info("Starting workers")
+	log.Info("Starting workers")
 	// Launch two workers to process OnionService resources
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(c.runWorker, time.Second, stopCh)
 	}
 
-	glog.Info("Started workers")
+	log.Info("Started workers")
 	<-stopCh
-	glog.Info("Shutting down workers")
+	log.Info("Shutting down workers")
 
 	return nil
 }
@@ -227,7 +228,7 @@ func (c *Controller) processNextWorkItem() bool {
 		// Finally, if no error occurs we Forget this item so it does not
 		// get queued again until another change happens.
 		c.workqueue.Forget(obj)
-		glog.Infof("Successfully synced '%s'", key)
+		log.Infof("Successfully synced '%s'", key)
 		return nil
 	}(obj)
 
@@ -320,9 +321,9 @@ func (c *Controller) handleObject(obj interface{}) {
 			runtime.HandleError(fmt.Errorf("error decoding object tombstone, invalid type"))
 			return
 		}
-		glog.V(4).Infof("Recovered deleted object '%s' from tombstone", object.GetName())
+		log.Infof("Recovered deleted object '%s' from tombstone", object.GetName())
 	}
-	glog.V(4).Infof("Processing object: %s", object.GetName())
+	log.Infof("Processing object: %s", object.GetName())
 	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
 		// If this object is not owned by a OnionService, we should not do anything more
 		// with it.
@@ -332,7 +333,7 @@ func (c *Controller) handleObject(obj interface{}) {
 
 		onionService, err := c.onionServicesLister.OnionServices(object.GetNamespace()).Get(ownerRef.Name)
 		if err != nil {
-			glog.V(4).Infof("ignoring orphaned object '%s' of onionService '%s'", object.GetSelfLink(), ownerRef.Name)
+			log.Infof("ignoring orphaned object '%s' of onionService '%s'", object.GetSelfLink(), ownerRef.Name)
 			return
 		}
 
