@@ -7,5 +7,6 @@ RUN cd /go/src/github.com/kragniz/kube-onions && make
 # final stage
 FROM scratch
 WORKDIR /app
-COPY --from=build-env /go/src/github.com/kragniz/kube-onions/kube-onion /app/
+VOLUME /tmp
+COPY --from=build-env /go/src/github.com/kragniz/kube-onions/onion-controller /app/
 ENTRYPOINT ["./onion-controller"]
