@@ -50,9 +50,9 @@ func GetAddress(key []byte) (string, error) {
 	}
 	digest := sha.Sum(nil)
 
-	// base32 encode it
-	b32 := base32.StdEncoding.EncodeToString(digest)
+	// base32 encode the first 10 characters
+	b32 := base32.StdEncoding.EncodeToString(digest[:10])
 
-	// lowercase and take the first 16 characters
-	return fmt.Sprintf("%s.onion", strings.ToLower(b32[:16])), nil
+	// lowercase and format
+	return fmt.Sprintf("%s.onion", strings.ToLower(b32)), nil
 }
