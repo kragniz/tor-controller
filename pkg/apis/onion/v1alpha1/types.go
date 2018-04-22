@@ -36,11 +36,13 @@ type OnionService struct {
 // OnionServiceSpec is the spec for a OnionService resource
 type OnionServiceSpec struct {
 	Service OnionServiceBackend `json:"service"`
+
+	PrivateKeySecret SecretReference `json:"privateKeySecret"`
 }
 
 type OnionServiceBackend struct {
 	// Specifies the name of the referenced service.
-	ServiceName string `json:"serviceName""`
+	ServiceName string `json:"serviceName"`
 
 	// Specifies the port of the referenced service.
 	ServicePort intstr.IntOrString `json:"servicePort"`
@@ -59,4 +61,12 @@ type OnionServiceList struct {
 	metav1.ListMeta `json:"metadata"`
 
 	Items []OnionService `json:"items"`
+}
+
+// SecretReference represents a Secret Reference
+type SecretReference struct {
+	// Name is unique within a namespace to reference a secret resource.
+	Name string `json:"name,omitempty"`
+
+	Key string `json:"key,omitempty"`
 }
