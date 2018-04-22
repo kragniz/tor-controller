@@ -14,3 +14,6 @@ vendor: Gopkg.toml
 
 generate:
 	./hack/update-codegen.sh
+
+kube-tor-daemon:
+	docker build . -f Dockerfile-tor-daemon -t kragniz/kube-tor-daemon:latest
