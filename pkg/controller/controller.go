@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang/glog"
 	log "github.com/sirupsen/logrus"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -44,7 +45,10 @@ import (
 	listers "github.com/kragniz/kube-onions/pkg/client/listers/onion/v1alpha1"
 )
 
-const controllerAgentName = "onion-controller"
+const (
+	controllerAgentName = "onion-controller"
+	deploymentNameFmt   = "%s-tor"
+)
 
 const (
 	// SuccessSynced is used as part of the Event 'reason' when a OnionService is synced
@@ -261,6 +265,52 @@ func (c *Controller) syncHandler(key string) error {
 			return nil
 		}
 
+		return err
+	}
+
+	deploymentName := fmt.Sprintf(deploymentNameFmt, onionService.Name)
+	if deploymentName == "" {
+		// We choose to absorb the error here as the worker would requeue the
+		// resource otherwise. Instead, the next time the resource is updated
+		// the resource will be queued again.
+		runtime.HandleError(fmt.Errorf("%s: deployment name must be specified", key))
+		return nil
+	}
+
+	// Get the deployment with the name specified in Foo.spec
+	deployment, err := c.deploymentsLister.Deployments(onionService.Namespace).Get(deploymentName)
+	// If the resource doesn't exist, we'll create it
+	if errors.IsNotFound(err) {
+		deployment, err = c.kubeclientset.AppsV1().Deployments(onionService.Namespace).Create(torDeployment(onionService))
+	}
+
+	// If an error occurs during Get/Create, we'll requeue the item so we can
+	// attempt processing again later. This could have been caused by a
+	// temporary network failure, or any other transient reason.
+	if err != nil {
+		return err
+	}
+
+	// If the Deployment is not controlled by this Foo resource, we should log
+	// a warning to the event recorder and ret
+	if !metav1.IsControlledBy(deployment, onionService) {
+		msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
+		c.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
+		return fmt.Errorf(msg)
+	}
+
+	// If this number of the replicas on the Foo resource is specified, and the
+	// number does not equal the current desired replicas on the Deployment, we
+	// should update the Deployment resource.
+	if foo.Spec.Replicas != nil && *foo.Spec.Replicas != *deployment.Spec.Replicas {
+		glog.V(4).Infof("Foo %s replicas: %d, deployment replicas: %d", name, *foo.Spec.Replicas, *deployment.Spec.Replicas)
+		deployment, err = c.kubeclientset.AppsV1().Deployments(foo.Namespace).Update(torDeployment(foo))
+	}
+
+	// If an error occurs during Update, we'll requeue the item so we can
+	// attempt processing again later. THis could have been caused by a
+	// temporary network failure, or any other transient reason.
+	if err != nil {
 		return err
 	}
 
