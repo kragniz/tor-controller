@@ -31,3 +31,14 @@ func TestLoad(t *testing.T) {
 		t.Errorf("Failed to validate test key: %v", err)
 	}
 }
+
+func TestGetAddress(t *testing.T) {
+	addr, err := GetAddress([]byte(testPrivateKey))
+	if err != nil {
+		t.Errorf("Failed to get address: %v", err)
+	}
+
+	if addr != testAddress {
+		t.Errorf("Address did not match: %s != %s", addr, testAddress)
+	}
+}
