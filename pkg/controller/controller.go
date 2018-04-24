@@ -18,9 +18,9 @@ package controller
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
-	"github.com/golang/glog"
 	log "github.com/sirupsen/logrus"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -279,9 +279,11 @@ func (c *Controller) syncHandler(key string) error {
 
 	// Get the deployment with the name specified in Foo.spec
 	deployment, err := c.deploymentsLister.Deployments(onionService.Namespace).Get(deploymentName)
+
 	// If the resource doesn't exist, we'll create it
+	newDeployment := torDeployment(onionService)
 	if errors.IsNotFound(err) {
-		deployment, err = c.kubeclientset.AppsV1().Deployments(onionService.Namespace).Create(torDeployment(onionService))
+		deployment, err = c.kubeclientset.AppsV1().Deployments(onionService.Namespace).Create(newDeployment)
 	}
 
 	// If an error occurs during Get/Create, we'll requeue the item so we can
@@ -299,12 +301,9 @@ func (c *Controller) syncHandler(key string) error {
 		return fmt.Errorf(msg)
 	}
 
-	// If this number of the replicas on the Foo resource is specified, and the
-	// number does not equal the current desired replicas on the Deployment, we
-	// should update the Deployment resource.
-	if foo.Spec.Replicas != nil && *foo.Spec.Replicas != *deployment.Spec.Replicas {
-		glog.V(4).Infof("Foo %s replicas: %d, deployment replicas: %d", name, *foo.Spec.Replicas, *deployment.Spec.Replicas)
-		deployment, err = c.kubeclientset.AppsV1().Deployments(foo.Namespace).Update(torDeployment(foo))
+	// If the deployment specs don't match, update
+	if !reflect.DeepEqual(deployment.Spec, newDeployment.Spec) {
+		deployment, err = c.kubeclientset.AppsV1().Deployments(onionService.Namespace).Update(newDeployment)
 	}
 
 	// If an error occurs during Update, we'll requeue the item so we can
