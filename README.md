@@ -7,5 +7,5 @@ Start
 -----
 
 ```
-$ helm install chart/onion-controller/ --name onion-controller --wait
+$ helm install chart/onion-controller/ --name onion-controller --namespace kube-system --wait
 ```
