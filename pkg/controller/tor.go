@@ -11,6 +11,10 @@ import (
 	"github.com/kragniz/kube-onions/pkg/apis/onion/v1alpha1"
 )
 
+const (
+	privateKeyVolume = "private-key"
+)
+
 func torDeployment(onion *v1alpha1.OnionService) *appsv1.Deployment {
 	labels := map[string]string{
 		"app":        "tor",
@@ -27,7 +31,7 @@ func torDeployment(onion *v1alpha1.OnionService) *appsv1.Deployment {
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
 					Group:   v1alpha1.SchemeGroupVersion.Group,
 					Version: v1alpha1.SchemeGroupVersion.Version,
-					Kind:    "Foo",
+					Kind:    "OnionService",
 				}),
 			},
 		},
@@ -44,6 +48,29 @@ func torDeployment(onion *v1alpha1.OnionService) *appsv1.Deployment {
 						{
 							Name:  "tor",
 							Image: "kragniz/kube-tor-daemon:latest",
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      privateKeyVolume,
+									MountPath: "/run/tor",
+									ReadOnly:  true,
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: privateKeyVolume,
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: onion.Spec.PrivateKeySecret.Name,
+									Items: []corev1.KeyToPath{
+										{
+											Key:  onion.Spec.PrivateKeySecret.Key,
+											Path: "private_key",
+										},
+									},
+								},
+							},
 						},
 					},
 				},
