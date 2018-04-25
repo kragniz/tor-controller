@@ -39,7 +39,7 @@ type OnionServiceSpec struct {
 
 	PrivateKeySecret SecretReference `json:"privateKeySecret"`
 
-	ExtraConfig string `json:"extraConfig"`
+	ExtraConfig string `json:"extraConfig,omitempty"`
 }
 
 type OnionServiceBackend struct {
