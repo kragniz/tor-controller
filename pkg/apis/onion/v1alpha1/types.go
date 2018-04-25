@@ -38,6 +38,8 @@ type OnionServiceSpec struct {
 	Service OnionServiceBackend `json:"service"`
 
 	PrivateKeySecret SecretReference `json:"privateKeySecret"`
+
+	ExtraConfig string `json:"extraConfig"`
 }
 
 type OnionServiceBackend struct {
