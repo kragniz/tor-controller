@@ -109,6 +109,7 @@ func (in *OnionServiceSpec) DeepCopyInto(out *OnionServiceSpec) {
 	*out = *in
 	out.Service = in.Service
 	out.PrivateKeySecret = in.PrivateKeySecret
+	out.PublicPort = in.PublicPort
 	return
 }
 

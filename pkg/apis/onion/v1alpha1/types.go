@@ -39,6 +39,9 @@ type OnionServiceSpec struct {
 
 	PrivateKeySecret SecretReference `json:"privateKeySecret"`
 
+	// Specifies the externally exposed port.
+	PublicPort intstr.IntOrString `json:"publicPort"`
+
 	ExtraConfig string `json:"extraConfig,omitempty"`
 }
 
