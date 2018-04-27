@@ -34,6 +34,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	appslisters "k8s.io/client-go/listers/apps/v1"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
@@ -72,8 +73,12 @@ type Controller struct {
 	// onionclientset is a clientset for our own API group
 	onionclientset clientset.Interface
 
-	deploymentsLister   appslisters.DeploymentLister
-	deploymentsSynced   cache.InformerSynced
+	deploymentsLister appslisters.DeploymentLister
+	deploymentsSynced cache.InformerSynced
+
+	servicesLister corelisters.ServiceLister
+	servicesSynced cache.InformerSynced
+
 	onionServicesLister listers.OnionServiceLister
 	onionServicesSynced cache.InformerSynced
 
@@ -95,9 +100,10 @@ func NewController(
 	kubeInformerFactory kubeinformers.SharedInformerFactory,
 	onionInformerFactory informers.SharedInformerFactory) *Controller {
 
-	// obtain references to shared index informers for the Deployment and OnionService
-	// types.
+	// obtain references to shared index informers.
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
+	servicesInformer := kubeInformerFactory.Core().V1().Services()
+
 	onionServiceInformer := onionInformerFactory.Onion().V1alpha1().OnionServices()
 
 	// Create event broadcaster
@@ -115,6 +121,8 @@ func NewController(
 		onionclientset:      onionclientset,
 		deploymentsLister:   deploymentInformer.Lister(),
 		deploymentsSynced:   deploymentInformer.Informer().HasSynced,
+		servicesLister:      servicesInformer.Lister(),
+		servicesSynced:      servicesInformer.Informer().HasSynced,
 		onionServicesLister: onionServiceInformer.Lister(),
 		onionServicesSynced: onionServiceInformer.Informer().HasSynced,
 		workqueue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "OnionServices"),
@@ -122,13 +130,20 @@ func NewController(
 	}
 
 	log.Info("Setting up event handlers")
-	// Set up an event handler for when OnionService resources change
 	onionServiceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.enqueueOnionService,
 		UpdateFunc: func(old, new interface{}) {
 			controller.enqueueOnionService(new)
 		},
 	})
+
+	servicesInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: controller.enqueueOnionService,
+		UpdateFunc: func(old, new interface{}) {
+			controller.enqueueOnionService(new)
+		},
+	})
+
 	// Set up an event handler for when Deployment resources change. This
 	// handler will lookup the owner of the given Deployment, and if it is
 	// owned by a OnionService resource will enqueue that OnionService resource for
