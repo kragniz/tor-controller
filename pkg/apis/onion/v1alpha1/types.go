@@ -47,10 +47,10 @@ type OnionServiceSpec struct {
 
 type OnionServiceBackend struct {
 	// Specifies the name of the referenced service.
-	ServiceName string `json:"serviceName"`
+	Name string `json:"name"`
 
 	// Specifies the port of the referenced service.
-	ServicePort intstr.IntOrString `json:"servicePort"`
+	Port intstr.IntOrString `json:"port"`
 }
 
 // OnionServiceStatus is the status for a OnionService resource
