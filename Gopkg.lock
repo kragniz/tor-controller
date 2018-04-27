@@ -450,26 +450,9 @@
   packages = ["pkg/util/proto"]
   revision = "1e45fb05b06309c0d807d0930e1a81fe0a1cd4b8"
 
-[[projects]]
-  branch = "master"
-  name = "k8s.io/sample-controller"
-  packages = [
-    "pkg/apis/samplecontroller",
-    "pkg/apis/samplecontroller/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/samplecontroller/v1alpha1",
-    "pkg/client/clientset/versioned/typed/samplecontroller/v1alpha1/fake",
-    "pkg/client/informers/externalversions/internalinterfaces",
-    "pkg/client/informers/externalversions/samplecontroller",
-    "pkg/client/informers/externalversions/samplecontroller/v1alpha1",
-    "pkg/client/listers/samplecontroller/v1alpha1"
-  ]
-  revision = "9b81532a606166870df632aa9501b312845edea7"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7ecd29ec2efab0be4747264c4c0cfbba7ad90342cabe101850af37ec5a63b1c0"
+  inputs-digest = "74e22af4c8fc78e1c0807c6407a1ff3c49bb7fa073720ab12d2c74d8b5b012d7"
   solver-name = "gps-cdcl"
   solver-version = 1
