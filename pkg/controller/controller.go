@@ -18,7 +18,6 @@ package controller
 
 import (
 	"fmt"
-	"reflect"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -49,6 +48,8 @@ import (
 const (
 	controllerAgentName = "onion-controller"
 	deploymentNameFmt   = "%s-tor"
+	configmapNameFmt    = "%s-tor-config"
+	serviceNameFmt      = "%s-tor-svc"
 )
 
 const (
@@ -79,6 +80,9 @@ type Controller struct {
 	servicesLister corelisters.ServiceLister
 	servicesSynced cache.InformerSynced
 
+	configmapsLister corelisters.ConfigMapLister
+	configmapsSynced cache.InformerSynced
+
 	onionServicesLister listers.OnionServiceLister
 	onionServicesSynced cache.InformerSynced
 
@@ -103,6 +107,7 @@ func NewController(
 	// obtain references to shared index informers.
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
 	servicesInformer := kubeInformerFactory.Core().V1().Services()
+	configmapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
 
 	onionServiceInformer := onionInformerFactory.Onion().V1alpha1().OnionServices()
 
@@ -123,6 +128,8 @@ func NewController(
 		deploymentsSynced:   deploymentInformer.Informer().HasSynced,
 		servicesLister:      servicesInformer.Lister(),
 		servicesSynced:      servicesInformer.Informer().HasSynced,
+		configmapsLister:    configmapInformer.Lister(),
+		configmapsSynced:    configmapInformer.Informer().HasSynced,
 		onionServicesLister: onionServiceInformer.Lister(),
 		onionServicesSynced: onionServiceInformer.Informer().HasSynced,
 		workqueue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "OnionServices"),
@@ -160,6 +167,7 @@ func NewController(
 				// Two different versions of the same Deployment will always have different RVs.
 				return
 			}
+			log.Info("deploymentInformer")
 			controller.handleObject(new)
 		},
 		DeleteFunc: controller.handleObject,
@@ -283,53 +291,16 @@ func (c *Controller) syncHandler(key string) error {
 		return err
 	}
 
-	deploymentName := fmt.Sprintf(deploymentNameFmt, onionService.Name)
-	if deploymentName == "" {
-		// We choose to absorb the error here as the worker would requeue the
-		// resource otherwise. Instead, the next time the resource is updated
-		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("%s: deployment name must be specified", key))
-		return nil
-	}
-
-	// Get the deployment with the name specified in Foo.spec
-	deployment, err := c.deploymentsLister.Deployments(onionService.Namespace).Get(deploymentName)
-
-	// If the resource doesn't exist, we'll create it
-	newDeployment := torDeployment(onionService)
-	if errors.IsNotFound(err) {
-		deployment, err = c.kubeclientset.AppsV1().Deployments(onionService.Namespace).Create(newDeployment)
-	}
-
-	// If an error occurs during Get/Create, we'll requeue the item so we can
-	// attempt processing again later. This could have been caused by a
-	// temporary network failure, or any other transient reason.
+	err = c.syncConfigmap(onionService)
 	if err != nil {
 		return err
 	}
 
-	// If the Deployment is not controlled by this Foo resource, we should log
-	// a warning to the event recorder and ret
-	if !metav1.IsControlledBy(deployment, onionService) {
-		msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
-		c.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		return fmt.Errorf(msg)
-	}
-
-	// If the deployment specs don't match, update
-	if !reflect.DeepEqual(deployment.Spec, newDeployment.Spec) {
-		deployment, err = c.kubeclientset.AppsV1().Deployments(onionService.Namespace).Update(newDeployment)
-	}
-
-	// If an error occurs during Update, we'll requeue the item so we can
-	// attempt processing again later. THis could have been caused by a
-	// temporary network failure, or any other transient reason.
+	err = c.syncDeployment(onionService)
 	if err != nil {
 		return err
 	}
 
-	// Finally, we update the status block of the OnionService resource to reflect the
-	// current state of the world
 	err = c.updateOnionServiceStatus(onionService)
 	if err != nil {
 		return err
