@@ -47,7 +47,7 @@ import (
 
 const (
 	controllerAgentName = "onion-controller"
-	deploymentNameFmt   = "%s-tor"
+	deploymentNameFmt   = "%s-tor-daemon"
 	configmapNameFmt    = "%s-tor-config"
 	serviceNameFmt      = "%s-tor-svc"
 )
