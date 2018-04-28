@@ -98,23 +98,25 @@ func torDeployment(onion *v1alpha1.OnionService) *appsv1.Deployment {
 							Name:  "tor",
 							Image: "kragniz/kube-tor-daemon:latest",
 							Command: []string{
-								"tor",
+								"sleep",
+								//"tor",
 							},
 							Args: []string{
-								"-f",
-								"/etc/tor/tor-config",
+								"10000",
+								//"-f",
+								//"/etc/tor/tor-config",
 							},
 							ImagePullPolicy: "Never",
 
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      privateKeyVolume,
-									MountPath: "/run/tor",
+									MountPath: "/run/tor/service",
 									ReadOnly:  true,
 								},
 								{
 									Name:      torConfigVolume,
-									MountPath: "/etc/",
+									MountPath: "/etc/tor",
 									ReadOnly:  true,
 								},
 							},
@@ -125,7 +127,8 @@ func torDeployment(onion *v1alpha1.OnionService) *appsv1.Deployment {
 							Name: privateKeyVolume,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: onion.Spec.PrivateKeySecret.Name,
+									SecretName:  onion.Spec.PrivateKeySecret.Name,
+									DefaultMode: configPermissions(0600),
 									Items: []corev1.KeyToPath{
 										{
 											Key:  onion.Spec.PrivateKeySecret.Key,
@@ -142,11 +145,11 @@ func torDeployment(onion *v1alpha1.OnionService) *appsv1.Deployment {
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: fmt.Sprintf(configmapNameFmt, onion.Name),
 									},
+									DefaultMode: configPermissions(0700),
 									Items: []corev1.KeyToPath{
 										{
 											Key:  "tor-config",
-											Path: "tor/tor-config",
-											Mode: configPermissions(0700),
+											Path: "tor-config",
 										},
 									},
 								},
