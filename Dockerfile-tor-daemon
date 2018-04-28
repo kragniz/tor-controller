@@ -1,4 +1,0 @@
-FROM alpine
-RUN apk update && apk add tor && mkdir -p /run/tor/
-WORKDIR /app
-ENTRYPOINT ["tor", "-f", "/run/tor/torrc"]

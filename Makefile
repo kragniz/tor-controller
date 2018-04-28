@@ -16,4 +16,4 @@ generate:
 	./hack/update-codegen.sh
 
 kube-tor-daemon:
-	docker build . -f Dockerfile-tor-daemon -t kragniz/kube-tor-daemon:latest
+	docker build . -f tor-daemon/Dockerfile -t kragniz/kube-tor-daemon:latest
