@@ -41,7 +41,7 @@ func configPermissions(p int32) *int32 {
 	return &p
 }
 
-func buildTorConfig(onion *v1alpha1.OnionService) (string, error) {
+func buildTorConfig(onion *v1alpha1.OnionService, serviceClusterIP string) (string, error) {
 	ports := []portPair{}
 	for _, p := range onion.Spec.Ports {
 		port := portPair{
@@ -54,7 +54,7 @@ func buildTorConfig(onion *v1alpha1.OnionService) (string, error) {
 	s := onionService{
 		ServiceName:      fmt.Sprintf(serviceNameFmt, onion.Name),
 		ServiceNamespace: onion.Namespace,
-		ServiceClusterIP: "",
+		ServiceClusterIP: serviceClusterIP,
 		ServiceDir:       "/run/tor/",
 		Ports:            ports,
 	}
@@ -67,8 +67,8 @@ func buildTorConfig(onion *v1alpha1.OnionService) (string, error) {
 	return tmp.String(), nil
 }
 
-func torConfigmap(onion *v1alpha1.OnionService) (*corev1.ConfigMap, error) {
-	config, err := buildTorConfig(onion)
+func torConfigmap(onion *v1alpha1.OnionService, serviceClusterIP string) (*corev1.ConfigMap, error) {
+	config, err := buildTorConfig(onion, serviceClusterIP)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,15 @@ func (c *Controller) syncConfigmap(onionService *v1alpha1.OnionService) error {
 		return nil
 	}
 
-	newConfigmap, err := torConfigmap(onionService)
+	serviceName := fmt.Sprintf(serviceNameFmt, onionService.Name)
+	service, err := c.servicesLister.Services(onionService.Namespace).Get(serviceName)
+	if err != nil {
+		return err
+	}
+
+	clusterIP := service.Spec.ClusterIP
+
+	newConfigmap, err := torConfigmap(onionService, clusterIP)
 	if err != nil {
 		return err
 	}
