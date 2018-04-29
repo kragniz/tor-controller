@@ -188,7 +188,12 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) error {
 
 	// Wait for the caches to be synced before starting workers
 	log.Info("Waiting for informer caches to sync")
-	if ok := cache.WaitForCacheSync(stopCh, c.deploymentsSynced, c.onionServicesSynced); !ok {
+	if ok := cache.WaitForCacheSync(
+		stopCh,
+		c.deploymentsSynced,
+		c.onionServicesSynced,
+		c.servicesSynced,
+	); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
