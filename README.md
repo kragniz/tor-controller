@@ -25,10 +25,11 @@ kind: OnionService
 metadata:
   name: example-onion
 spec:
-  publicPort: 80
-  service:
-    serviceName: test-svc
-    servicePort: 8080
+  selector:
+    app: httpd
+  ports:
+    - targetPort: 8080
+      publicPort: 80
   privateKeySecret:
     name: bmy7nlgozpyn26tv
     key: private_key
