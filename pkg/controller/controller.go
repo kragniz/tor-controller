@@ -295,6 +295,11 @@ func (c *Controller) syncHandler(key string) error {
 		return err
 	}
 
+	err = c.syncService(onionService)
+	if err != nil {
+		return err
+	}
+
 	err = c.syncConfigmap(onionService)
 	if err != nil {
 		return err

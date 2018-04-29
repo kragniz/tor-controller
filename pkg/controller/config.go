@@ -46,12 +46,12 @@ func buildTorConfig(onion *onionService) (string, error) {
 
 func torConfigmap(onion *v1alpha1.OnionService) (*corev1.ConfigMap, error) {
 	s := onionService{
-		ServiceName:      onion.Spec.Service.Name,
+		ServiceName:      fmt.Sprintf(serviceNameFmt, onion.Name),
 		ServiceNamespace: onion.Namespace,
 		ServiceClusterIP: "",
 		ServiceDir:       "/run/tor/",
-		ServicePort:      onion.Spec.Service.Port.IntVal,
-		PublicPort:       onion.Spec.PublicPort.IntVal,
+		ServicePort:      onion.Spec.Ports[0].TargetPort.IntVal,
+		PublicPort:       onion.Spec.Ports[0].PublicPort,
 	}
 
 	_, err := buildTorConfig(&s)
