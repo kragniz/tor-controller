@@ -167,7 +167,6 @@ func NewController(
 				// Two different versions of the same Deployment will always have different RVs.
 				return
 			}
-			log.Info("deploymentInformer")
 			controller.handleObject(new)
 		},
 		DeleteFunc: controller.handleObject,

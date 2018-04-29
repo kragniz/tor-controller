@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -54,7 +53,7 @@ func (c *Controller) syncDeployment(onionService *v1alpha1.OnionService) error {
 	}
 
 	// If the deployment specs don't match, update
-	if !reflect.DeepEqual(deployment.Spec, newDeployment.Spec) {
+	if !deploymentEqual(deployment, newDeployment) {
 		deployment, err = c.kubeclientset.AppsV1().Deployments(onionService.Namespace).Update(newDeployment)
 	}
 
@@ -62,6 +61,12 @@ func (c *Controller) syncDeployment(onionService *v1alpha1.OnionService) error {
 		return err
 	}
 	return nil
+}
+
+func deploymentEqual(a, b *appsv1.Deployment) bool {
+	// TODO: actually detect differences
+
+	return true
 }
 
 func torDeployment(onion *v1alpha1.OnionService) *appsv1.Deployment {
