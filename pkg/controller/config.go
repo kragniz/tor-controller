@@ -17,7 +17,9 @@ import (
 const configFormat = `
 SocksPort 0
 HiddenServiceDir {{ .ServiceDir }}
-HiddenServicePort {{ .PublicPort }} {{ .ServiceClusterIP }}:{{ .ServicePort }}
+{{ range .Ports }}
+HiddenServicePort {{ .PublicPort }} {{ $.ServiceClusterIP }}:{{ .ServicePort }}
+{{ end }}
 `
 
 var configTemplate = template.Must(template.New("config").Parse(configFormat))
@@ -27,17 +29,38 @@ type onionService struct {
 	ServiceNamespace string
 	ServiceClusterIP string
 	ServiceDir       string
-	ServicePort      int32
-	PublicPort       int32
+	Ports            []portPair
+}
+
+type portPair struct {
+	ServicePort int32
+	PublicPort  int32
 }
 
 func configPermissions(p int32) *int32 {
 	return &p
 }
 
-func buildTorConfig(onion *onionService) (string, error) {
+func buildTorConfig(onion *v1alpha1.OnionService) (string, error) {
+	ports := []portPair{}
+	for _, p := range onion.Spec.Ports {
+		port := portPair{
+			ServicePort: p.TargetPort.IntVal,
+			PublicPort:  p.PublicPort,
+		}
+		ports = append(ports, port)
+	}
+
+	s := onionService{
+		ServiceName:      fmt.Sprintf(serviceNameFmt, onion.Name),
+		ServiceNamespace: onion.Namespace,
+		ServiceClusterIP: "",
+		ServiceDir:       "/run/tor/",
+		Ports:            ports,
+	}
+
 	var tmp bytes.Buffer
-	err := configTemplate.Execute(&tmp, onion)
+	err := configTemplate.Execute(&tmp, s)
 	if err != nil {
 		return "", err
 	}
@@ -45,23 +68,10 @@ func buildTorConfig(onion *onionService) (string, error) {
 }
 
 func torConfigmap(onion *v1alpha1.OnionService) (*corev1.ConfigMap, error) {
-	s := onionService{
-		ServiceName:      fmt.Sprintf(serviceNameFmt, onion.Name),
-		ServiceNamespace: onion.Namespace,
-		ServiceClusterIP: "",
-		ServiceDir:       "/run/tor/",
-		ServicePort:      onion.Spec.Ports[0].TargetPort.IntVal,
-		PublicPort:       onion.Spec.Ports[0].PublicPort,
-	}
-
-	_, err := buildTorConfig(&s)
+	config, err := buildTorConfig(onion)
 	if err != nil {
 		return nil, err
 	}
-
-	fakeConf := `HiddenServiceDir /run/tor/service
-HiddenServicePort 80 127.0.0.1:80                                                  
-`
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -76,7 +86,7 @@ HiddenServicePort 80 127.0.0.1:80
 			},
 		},
 		Data: map[string]string{
-			"tor-config": fakeConf,
+			"tor-config": config,
 		},
 	}, nil
 }
