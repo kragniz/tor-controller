@@ -75,7 +75,7 @@ func torConfigmap(onion *v1alpha1.OnionService, serviceClusterIP string) (*corev
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf(configmapNameFmt, onion.Name),
+			Name:      configMapName(onion),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
@@ -91,8 +91,12 @@ func torConfigmap(onion *v1alpha1.OnionService, serviceClusterIP string) (*corev
 	}, nil
 }
 
+func configMapName(onion *v1alpha1.OnionService) string {
+	return fmt.Sprintf(configmapNameFmt, onion.Name)
+}
+
 func (c *Controller) syncConfigmap(onionService *v1alpha1.OnionService) error {
-	configmapName := fmt.Sprintf(configmapNameFmt, onionService.Name)
+	configmapName := configMapName(onionService)
 	if configmapName == "" {
 		runtime.HandleError(fmt.Errorf("configmap name must be specified"))
 		return nil

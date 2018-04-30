@@ -19,7 +19,7 @@ const (
 )
 
 func deploymentName(onion *v1alpha1.OnionService) string {
-	return fmt.Sprintf(deploymentNameFmt, onionService.Name)
+	return fmt.Sprintf(deploymentNameFmt, onion.Name)
 }
 
 func (c *Controller) syncDeployment(onionService *v1alpha1.OnionService) error {
