@@ -12,8 +12,12 @@ import (
 	"github.com/kragniz/kube-onions/pkg/apis/onion/v1alpha1"
 )
 
+func serviceName(onion *v1alpha1.OnionService) string {
+	return fmt.Sprintf(serviceNameFmt, onion.Name)
+}
+
 func (c *Controller) syncService(onionService *v1alpha1.OnionService) error {
-	serviceName := fmt.Sprintf(serviceNameFmt, onionService.Name)
+	serviceName := serviceName(onionService)
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
@@ -67,11 +71,9 @@ func torService(onion *v1alpha1.OnionService) *corev1.Service {
 		ports = append(ports, port)
 	}
 
-	name := fmt.Sprintf(serviceNameFmt, onion.Name)
-
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      serviceName(onion),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{

@@ -52,7 +52,7 @@ func buildTorConfig(onion *v1alpha1.OnionService, serviceClusterIP string) (stri
 	}
 
 	s := onionService{
-		ServiceName:      fmt.Sprintf(serviceNameFmt, onion.Name),
+		ServiceName:      serviceName(onion),
 		ServiceNamespace: onion.Namespace,
 		ServiceClusterIP: serviceClusterIP,
 		ServiceDir:       "/run/tor/",
@@ -98,7 +98,7 @@ func (c *Controller) syncConfigmap(onionService *v1alpha1.OnionService) error {
 		return nil
 	}
 
-	serviceName := fmt.Sprintf(serviceNameFmt, onionService.Name)
+	serviceName := serviceName(onionService)
 	service, err := c.servicesLister.Services(onionService.Namespace).Get(serviceName)
 	if err != nil {
 		return err
