@@ -55,7 +55,7 @@ func buildTorConfig(onion *v1alpha1.OnionService, serviceClusterIP string) (stri
 		ServiceName:      serviceName(onion),
 		ServiceNamespace: onion.Namespace,
 		ServiceClusterIP: serviceClusterIP,
-		ServiceDir:       "/run/tor/",
+		ServiceDir:       "/run/tor/service",
 		Ports:            ports,
 	}
 
