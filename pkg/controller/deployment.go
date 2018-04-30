@@ -18,8 +18,12 @@ const (
 	torConfigVolume  = "tor-config"
 )
 
+func deploymentName(onion *v1alpha1.OnionService) string {
+	return fmt.Sprintf(deploymentNameFmt, onionService.Name)
+}
+
 func (c *Controller) syncDeployment(onionService *v1alpha1.OnionService) error {
-	deploymentName := fmt.Sprintf(deploymentNameFmt, onionService.Name)
+	deploymentName := deploymentName(onionService)
 	if deploymentName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
@@ -75,11 +79,9 @@ func torDeployment(onion *v1alpha1.OnionService) *appsv1.Deployment {
 		"controller": onion.Name,
 	}
 
-	name := fmt.Sprintf(deploymentNameFmt, onion.Name)
-
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      deploymentName(onion),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
