@@ -43,6 +43,7 @@ import (
 	onionscheme "github.com/kragniz/kube-onions/pkg/client/clientset/versioned/scheme"
 	informers "github.com/kragniz/kube-onions/pkg/client/informers/externalversions"
 	listers "github.com/kragniz/kube-onions/pkg/client/listers/onion/v1alpha1"
+	"github.com/kragniz/kube-onions/pkg/onionaddr"
 )
 
 const (
@@ -80,6 +81,9 @@ type Controller struct {
 	servicesLister corelisters.ServiceLister
 	servicesSynced cache.InformerSynced
 
+	secretsLister corelisters.SecretLister
+	secretsSynced cache.InformerSynced
+
 	configmapsLister corelisters.ConfigMapLister
 	configmapsSynced cache.InformerSynced
 
@@ -107,6 +111,7 @@ func NewController(
 	// obtain references to shared index informers.
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
 	servicesInformer := kubeInformerFactory.Core().V1().Services()
+	secretsInformer := kubeInformerFactory.Core().V1().Secrets()
 	configmapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
 
 	onionServiceInformer := onionInformerFactory.Onion().V1alpha1().OnionServices()
@@ -128,6 +133,8 @@ func NewController(
 		deploymentsSynced:   deploymentInformer.Informer().HasSynced,
 		servicesLister:      servicesInformer.Lister(),
 		servicesSynced:      servicesInformer.Informer().HasSynced,
+		secretsLister:       secretsInformer.Lister(),
+		secretsSynced:       secretsInformer.Informer().HasSynced,
 		configmapsLister:    configmapInformer.Lister(),
 		configmapsSynced:    configmapInformer.Informer().HasSynced,
 		onionServicesLister: onionServiceInformer.Lister(),
@@ -320,16 +327,22 @@ func (c *Controller) syncHandler(key string) error {
 }
 
 func (c *Controller) updateOnionServiceStatus(onionService *onionv1alpha1.OnionService) error {
-	// NEVER modify objects from the store. It's a read-only, local cache.
-	// You can use DeepCopy() to make a deep copy of original object and modify this copy
-	// Or create a copy manually for better performance
 	onionServiceCopy := onionService.DeepCopy()
 
-	// If the CustomResourceSubresources feature gate is not enabled,
-	// we must use Update instead of UpdateStatus to update the Status block of the OnionService resource.
-	// UpdateStatus will not allow changes to the Spec of the resource,
-	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err := c.onionclientset.OnionV1alpha1().OnionServices(onionService.Namespace).Update(onionServiceCopy)
+	privKeySecret, err := c.secretsLister.Secrets(onionServiceCopy.Namespace).Get(onionServiceCopy.Spec.PrivateKeySecret.Name)
+	if err != nil {
+		return err
+	}
+
+	privKey := privKeySecret.StringData[onionServiceCopy.Spec.PrivateKeySecret.Key]
+	hostname, err := onionaddr.GetAddress([]byte(privKey))
+	if err != nil {
+		return err
+	}
+
+	onionServiceCopy.Status.Hostname = hostname
+
+	_, err = c.onionclientset.OnionV1alpha1().OnionServices(onionService.Namespace).UpdateStatus(onionServiceCopy)
 	return err
 }
 
