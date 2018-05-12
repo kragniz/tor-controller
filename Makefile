@@ -6,8 +6,9 @@ push: docker
 docker: onion-controller
 	docker build . -t kragniz/kube-onions:latest
 
-onion-controller: Makefile $(wildcard **/*.go)
-	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o onion-controller
+.PHONY: onion-controller
+onion-controller:
+	CGO_ENABLED=0 GOOS=linux go build -ldflags '-extldflags "-static"' -o onion-controller
 
 vendor: Gopkg.toml
 	dep ensure
