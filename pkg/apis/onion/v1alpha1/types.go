@@ -50,6 +50,34 @@ type OnionServiceSpec struct {
 	ExtraConfig string `json:"extraConfig,omitempty"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// OnionService is a specification for a V3 OnionService resource
+type OnionV3Service struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   OnionV3ServiceSpec `json:"spec"`
+	Status OnionServiceStatus `json:"status"`
+}
+
+// OnionV3ServiceSpec is the spec for a OnionService resource
+type OnionV3ServiceSpec struct {
+	// The list of ports that are exposed by this service.
+	// +patchMergeKey=publicPort
+	// +patchStrategy=merge
+	Ports []ServicePort `json:"ports,omitempty" patchStrategy:"merge" patchMergeKey:"port"`
+
+	Selector map[string]string `json:"selector,omitempty"`
+
+	PrivateKeySecret SecretReference `json:"privateKeySecret"`
+
+	// Specifies the externally exposed port.
+	PublicPort intstr.IntOrString `json:"publicPort"`
+
+	ExtraConfig string `json:"extraConfig,omitempty"`
+}
+
 type ServicePort struct {
 	// Optional if only one ServicePort is defined on this service.
 	// +optional
