@@ -76,12 +76,59 @@ var (
 							Type: "object",
 						},
 						"spec": v1beta1.JSONSchemaProps{
-							Type:       "object",
-							Properties: map[string]v1beta1.JSONSchemaProps{},
+							Type: "object",
+							Properties: map[string]v1beta1.JSONSchemaProps{
+								"extraConfig": v1beta1.JSONSchemaProps{
+									Type: "string",
+								},
+								"ports": v1beta1.JSONSchemaProps{
+									Type: "array",
+									Items: &v1beta1.JSONSchemaPropsOrArray{
+										Schema: &v1beta1.JSONSchemaProps{
+											Type: "object",
+											Properties: map[string]v1beta1.JSONSchemaProps{
+												"name": v1beta1.JSONSchemaProps{
+													Type: "string",
+												},
+												"publicPort": v1beta1.JSONSchemaProps{
+													Type:   "integer",
+													Format: "int32",
+												},
+												"targetPort": v1beta1.JSONSchemaProps{
+													Type:       "object",
+													Properties: map[string]v1beta1.JSONSchemaProps{},
+												},
+											},
+										},
+									},
+								},
+								"privateKeySecret": v1beta1.JSONSchemaProps{
+									Type: "object",
+									Properties: map[string]v1beta1.JSONSchemaProps{
+										"key": v1beta1.JSONSchemaProps{
+											Type: "string",
+										},
+										"name": v1beta1.JSONSchemaProps{
+											Type: "string",
+										},
+									},
+								},
+								"publicPort": v1beta1.JSONSchemaProps{
+									Type:       "object",
+									Properties: map[string]v1beta1.JSONSchemaProps{},
+								},
+								"selector": v1beta1.JSONSchemaProps{
+									Type: "object",
+								},
+							},
 						},
 						"status": v1beta1.JSONSchemaProps{
-							Type:       "object",
-							Properties: map[string]v1beta1.JSONSchemaProps{},
+							Type: "object",
+							Properties: map[string]v1beta1.JSONSchemaProps{
+								"hostname": v1beta1.JSONSchemaProps{
+									Type: "string",
+								},
+							},
 						},
 					},
 				},
