@@ -10,7 +10,7 @@ type OnionServiceSpec struct {
 	// The list of ports that are exposed by this service.
 	// +patchMergeKey=publicPort
 	// +patchStrategy=merge
-	Ports []ServicePort `json:"ports,omitempty" patchStrategy:"merge" patchMergeKey:"port"`
+	Ports []ServicePort `json:"ports,omitempty" patchStrategy:"merge" patchMergeKey:"publicPort"`
 
 	Selector map[string]string `json:"selector,omitempty"`
 
