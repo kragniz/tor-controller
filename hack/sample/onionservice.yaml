@@ -1,0 +1,6 @@
+apiVersion: tor.k8s.io/v1alpha1
+kind: OnionService
+metadata:
+  name: onionservice-example
+spec:
+  foo: bar
