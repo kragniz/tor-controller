@@ -95,8 +95,8 @@ var (
 													Format: "int32",
 												},
 												"targetPort": v1beta1.JSONSchemaProps{
-													Type:       "object",
-													Properties: map[string]v1beta1.JSONSchemaProps{},
+													Type:   "integer",
+													Format: "int32",
 												},
 											},
 										},
@@ -112,10 +112,6 @@ var (
 											Type: "string",
 										},
 									},
-								},
-								"publicPort": v1beta1.JSONSchemaProps{
-									Type:       "object",
-									Properties: map[string]v1beta1.JSONSchemaProps{},
 								},
 								"selector": v1beta1.JSONSchemaProps{
 									Type: "object",

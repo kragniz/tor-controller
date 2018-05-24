@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // OnionServiceSpec defines the desired state of OnionService
@@ -15,9 +14,6 @@ type OnionServiceSpec struct {
 	Selector map[string]string `json:"selector,omitempty"`
 
 	PrivateKeySecret SecretReference `json:"privateKeySecret"`
-
-	// Specifies the externally exposed port.
-	PublicPort intstr.IntOrString `json:"publicPort"`
 
 	ExtraConfig string `json:"extraConfig,omitempty"`
 }
@@ -39,7 +35,10 @@ type ServicePort struct {
 	// omitted or set equal to the 'port' field.
 	// More info: https://kubernetes.io/docs/concepts/services-networking/service/#defining-a-service
 	// +optional
-	TargetPort intstr.IntOrString `json:"targetPort,omitempty" protobuf:"bytes,4,opt,name=targetPort"`
+	TargetPort int32 `json:"targetPort,omitempty"`
+
+	// TODO: figure out how to make kubebuilder allow IntOrString fields
+	//TargetPort intstr.IntOrString `json:"targetPort,omitempty"`
 }
 
 // SecretReference represents a Secret Reference
