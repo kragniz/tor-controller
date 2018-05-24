@@ -6,6 +6,7 @@ import (
 	"github.com/kragniz/tor-controller/pkg/controller/onionservice"
 	"github.com/kragniz/tor-controller/pkg/inject/args"
 	"github.com/kubernetes-sigs/kubebuilder/pkg/inject/run"
+	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -23,6 +24,9 @@ func init() {
 		}
 
 		// Add Kubernetes informers
+		if err := arguments.ControllerManager.AddInformerProvider(&appsv1.Deployment{}, arguments.KubernetesInformers.Apps().V1().Deployments()); err != nil {
+			return err
+		}
 
 		if c, err := onionservice.ProvideController(arguments); err != nil {
 			return err
@@ -39,6 +43,17 @@ func init() {
 		APIGroups: []string{"tor.k8s.io"},
 		Resources: []string{"*"},
 		Verbs:     []string{"*"},
+	})
+	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
+		APIGroups: []string{
+			"apps",
+		},
+		Resources: []string{
+			"deployments",
+		},
+		Verbs: []string{
+			"create", "delete", "get", "list", "patch", "update", "watch",
+		},
 	})
 	// Inject GroupVersions
 	Injector.GroupVersions = append(Injector.GroupVersions, schema.GroupVersion{

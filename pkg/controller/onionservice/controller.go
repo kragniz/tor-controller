@@ -15,19 +15,15 @@ import (
 	"github.com/kragniz/tor-controller/pkg/inject/args"
 )
 
-// EDIT THIS FILE
-// This files was created by "kubebuilder create resource" for you to edit.
-// Controller implementation logic for OnionService resources goes here.
-
 func (bc *OnionServiceController) Reconcile(k types.ReconcileKey) error {
-	// INSERT YOUR CODE HERE
 	log.Printf("Implement the Reconcile function on onionservice.OnionServiceController to reconcile %s\n", k.Name)
 	return nil
 }
 
 // +kubebuilder:controller:group=tor,version=v1alpha1,kind=OnionService,resource=onionservices
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:informers:group=apps,version=v1,kind=Deployment
 type OnionServiceController struct {
-	// INSERT ADDITIONAL FIELDS HERE
 	onionserviceLister torv1alpha1lister.OnionServiceLister
 	onionserviceclient torv1alpha1client.TorV1alpha1Interface
 	// recorder is an event recorder for recording Event resources to the
