@@ -6,7 +6,9 @@ go:
 install:
   - curl -L -O https://github.com/kubernetes-sigs/kubebuilder/releases/download/v0.1.9/kubebuilder_0.1.9_linux_amd64.tar.gz
   - tar -zxvf kubebuilder_0.1.9_linux_amd64.tar.gz
-  - mv kubebuilder_0.1.9_linux_amd64 kubebuilder
-  - export PATH=$PATH:kubebuilder/bin
+  - mv kubebuilder_0.1.9_linux_amd64 ~/kubebuilder
+  - export PATH=$PATH:~/kubebuilder/bin
+  - export TEST_ASSET_ETCD=~/kubebuilder/bin/etcd
+  - export TEST_ASSET_KUBE_APISERVER=~/kubebuilder/bin/kube-apiserver
 
 script: go test ./pkg/...
