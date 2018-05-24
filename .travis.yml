@@ -2,4 +2,11 @@ language: go
 go:
   - "1.9"
   - "1.x"
+
+install:
+  - curl -L -O https://github.com/kubernetes-sigs/kubebuilder/releases/download/v0.1.9/kubebuilder_0.1.9_linux_amd64.tar.gz
+  - tar -zxvf kubebuilder_0.1.9_linux_amd64.tar.gz
+  - mv kubebuilder_0.1.9_linux_amd64 kubebuilder
+  - export PATH=$PATH:kubebuilder/bin
+
 script: go test ./pkg/...
