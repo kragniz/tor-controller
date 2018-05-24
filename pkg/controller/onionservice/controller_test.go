@@ -20,11 +20,22 @@ var _ = Describe("OnionService controller", func() {
 	var client OnionServiceInterface
 
 	BeforeEach(func() {
-		instance = OnionService{}
-		instance.Name = "instance-1"
+		instance = OnionService{
+			Spec: OnionServiceSpec{
+				Ports: []ServicePort{
+					ServicePort{
+						Name:       "port1",
+						PublicPort: 80,
+						//TargetPort: intstr.FromInt(8080),
+						TargetPort: 8080,
+					},
+				},
+			},
+		}
+		instance.Name = "tor-1"
 		expectedKey = types.ReconcileKey{
 			Namespace: "default",
-			Name:      "instance-1",
+			Name:      "tor-1",
 		}
 	})
 
