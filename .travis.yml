@@ -4,9 +4,10 @@ go:
   - "1.x"
 
 install:
-  - curl -L -O https://github.com/kubernetes-sigs/kubebuilder/releases/download/v0.1.9/kubebuilder_0.1.9_linux_amd64.tar.gz
-  - tar -zxvf kubebuilder_0.1.9_linux_amd64.tar.gz
-  - mv kubebuilder_0.1.9_linux_amd64 ~/kubebuilder
+  - export kubebuilder_url=${curl -s https://api.github.com/repos/kubernetes-sigs/kubebuilder/releases/latest | jq -r ".assets[] | select(.name | test(\"linux_amd64\")) | .browser_download_url"}
+  - curl -L -O ${kubebuilder_url}
+  - tar -zxvf kubebuilder_*_linux_amd64.tar.gz
+  - mv kubebuilder_*_linux_amd64 ~/kubebuilder
   - export PATH=$PATH:~/kubebuilder/bin
   - export TEST_ASSET_ETCD=~/kubebuilder/bin/etcd
   - export TEST_ASSET_KUBE_APISERVER=~/kubebuilder/bin/kube-apiserver
