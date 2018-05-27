@@ -26,9 +26,11 @@ var _ = Describe("OnionService controller", func() {
 					ServicePort{
 						Name:       "port1",
 						PublicPort: 80,
-						//TargetPort: intstr.FromInt(8080),
 						TargetPort: 8080,
 					},
+				},
+				Selector: map[string]string{
+					"app": "test",
 				},
 			},
 		}
