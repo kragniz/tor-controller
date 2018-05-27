@@ -96,7 +96,7 @@ func configMapName(onion *torv1alpha1.OnionService) string {
 	return fmt.Sprintf(configmapNameFmt, onion.Name)
 }
 
-func (bc *OnionServiceController) syncConfigmap(onionService *torv1alpha1.OnionService) error {
+func (bc *OnionServiceController) reconcileConfigmap(onionService *torv1alpha1.OnionService) error {
 	configmapName := configMapName(onionService)
 	if configmapName == "" {
 		runtime.HandleError(fmt.Errorf("configmap name must be specified"))

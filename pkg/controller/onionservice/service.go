@@ -17,7 +17,7 @@ func serviceName(onion *torv1alpha1.OnionService) string {
 	return fmt.Sprintf(serviceNameFmt, onion.Name)
 }
 
-func (bc *OnionServiceController) syncService(onionService *torv1alpha1.OnionService) error {
+func (bc *OnionServiceController) reconcileService(onionService *torv1alpha1.OnionService) error {
 	serviceName := serviceName(onionService)
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
@@ -57,7 +57,6 @@ func (bc *OnionServiceController) syncService(onionService *torv1alpha1.OnionSer
 
 func serviceEqual(a, b *corev1.Service) bool {
 	// TODO: actually detect differences
-
 	return true
 }
 

@@ -5,8 +5,10 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/runtime"
 
 	torv1alpha1 "github.com/kragniz/tor-controller/pkg/apis/tor/v1alpha1"
 )
@@ -20,7 +22,51 @@ func deploymentName(onion *torv1alpha1.OnionService) string {
 	return fmt.Sprintf(deploymentNameFmt, onion.Name)
 }
 
-func (c *OnionServiceController) syncDeployment(onionService *torv1alpha1.OnionService) error {
+func (bc *OnionServiceController) reconcileDeployment(onionService *torv1alpha1.OnionService) error {
+	deploymentName := deploymentName(onionService)
+	if deploymentName == "" {
+		// We choose to absorb the error here as the worker would requeue the
+		// resource otherwise. Instead, the next time the resource is updated
+		// the resource will be queued again.
+		runtime.HandleError(fmt.Errorf("%s/%s: deployment name must be specified", onionService.Namespace, onionService.Name))
+		return nil
+	}
+
+	deployment, err := bc.KubernetesInformers.Apps().V1().Deployments().Lister().Deployments(onionService.Namespace).Get(deploymentName)
+
+	// If the resource doesn't exist, we'll create it
+	newDeployment := torDeployment(onionService)
+	if apierrors.IsNotFound(err) {
+		deployment, err = bc.KubernetesClientSet.AppsV1().Deployments(onionService.Namespace).Create(newDeployment)
+	}
+
+	// If an error occurs during Get/Create, we'll requeue the item so we can
+	// attempt processing again later. This could have been caused by a
+	// temporary network failure, or any other transient reason.
+	if err != nil {
+		return err
+	}
+
+	// If the Deployment is not controlled by this Foo resource, we should log
+	// a warning to the event recorder and ret
+	if !metav1.IsControlledBy(deployment, onionService) {
+		msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
+		bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
+		return fmt.Errorf(msg)
+	}
+
+	// If the deployment specs don't match, update
+	if !deploymentEqual(deployment, newDeployment) {
+		deployment, err = bc.KubernetesClientSet.AppsV1().Deployments(onionService.Namespace).Update(newDeployment)
+	}
+
+	// If an error occurs during Update, we'll requeue the item so we can
+	// attempt processing again later. THis could have been caused by a
+	// temporary network failure, or any other transient reason.
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
