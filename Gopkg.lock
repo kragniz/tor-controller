@@ -144,7 +144,8 @@
     "pkg/inject/args",
     "pkg/inject/run",
     "pkg/install",
-    "pkg/signals"
+    "pkg/signals",
+    "pkg/test"
   ]
   revision = "f1bc52db26a58e04c0ebcddcbcc3ee7fcb32ea0c"
 
@@ -427,6 +428,7 @@
   name = "k8s.io/client-go"
   packages = [
     "discovery",
+    "discovery/fake",
     "informers",
     "informers/admissionregistration",
     "informers/admissionregistration/v1alpha1",
@@ -528,6 +530,7 @@
     "plugin/pkg/client/auth/gcp",
     "rest",
     "rest/watch",
+    "testing",
     "third_party/forked/golang/template",
     "tools/auth",
     "tools/cache",
@@ -580,6 +583,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2bd387a8582f12c06a9970c1db6746f3d274402e1025fed94ab2f59ffbc51939"
+  inputs-digest = "07d0c2748c961d1d2e5eb42b9b916654e066af9d9631c5f493b5b496ac30dc54"
   solver-name = "gps-cdcl"
   solver-version = 1

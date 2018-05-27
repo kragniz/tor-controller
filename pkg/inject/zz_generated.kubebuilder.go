@@ -25,10 +25,13 @@ func init() {
 		}
 
 		// Add Kubernetes informers
-		if err := arguments.ControllerManager.AddInformerProvider(&appsv1.Deployment{}, arguments.KubernetesInformers.Apps().V1().Deployments()); err != nil {
+		if err := arguments.ControllerManager.AddInformerProvider(&corev1.Service{}, arguments.KubernetesInformers.Core().V1().Services()); err != nil {
 			return err
 		}
-		if err := arguments.ControllerManager.AddInformerProvider(&corev1.Service{}, arguments.KubernetesInformers.Core().V1().Services()); err != nil {
+		if err := arguments.ControllerManager.AddInformerProvider(&corev1.ConfigMap{}, arguments.KubernetesInformers.Core().V1().ConfigMaps()); err != nil {
+			return err
+		}
+		if err := arguments.ControllerManager.AddInformerProvider(&appsv1.Deployment{}, arguments.KubernetesInformers.Apps().V1().Deployments()); err != nil {
 			return err
 		}
 
@@ -67,7 +70,18 @@ func init() {
 			"services",
 		},
 		Verbs: []string{
-			"get", "list", "watch",
+			"create", "delete", "get", "list", "patch", "update", "watch",
+		},
+	})
+	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
+		APIGroups: []string{
+			"",
+		},
+		Resources: []string{
+			"configmaps",
+		},
+		Verbs: []string{
+			"create", "delete", "get", "list", "patch", "update", "watch",
 		},
 	})
 	// Inject GroupVersions
