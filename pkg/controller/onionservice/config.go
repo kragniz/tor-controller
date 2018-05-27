@@ -105,11 +105,14 @@ func (bc *OnionServiceController) reconcileConfigmap(onionService *torv1alpha1.O
 
 	serviceName := serviceName(onionService)
 	service, err := bc.KubernetesInformers.Core().V1().Services().Lister().Services(onionService.Namespace).Get(serviceName)
-	if err != nil {
+	clusterIP := ""
+	if errors.IsNotFound(err) {
+		clusterIP = "0.0.0.0"
+	} else if err != nil {
 		return err
+	} else {
+		clusterIP = service.Spec.ClusterIP
 	}
-
-	clusterIP := service.Spec.ClusterIP
 
 	newConfigmap, err := torConfigmap(onionService, clusterIP)
 	if err != nil {

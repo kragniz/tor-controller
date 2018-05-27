@@ -54,17 +54,17 @@ func (bc *OnionServiceController) Reconcile(k types.ReconcileKey) error {
 		return err
 	}
 
+	err = bc.reconcileService(onionService)
+	if err != nil {
+		return err
+	}
+
 	err = bc.reconcileConfigmap(onionService)
 	if err != nil {
 		return err
 	}
 
 	err = bc.reconcileDeployment(onionService)
-	if err != nil {
-		return err
-	}
-
-	err = bc.reconcileService(onionService)
 	if err != nil {
 		return err
 	}
