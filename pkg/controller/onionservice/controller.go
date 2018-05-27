@@ -1,13 +1,18 @@
 package onionservice
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/kubernetes-sigs/kubebuilder/pkg/controller"
+	"github.com/kubernetes-sigs/kubebuilder/pkg/controller/eventhandlers"
+	"github.com/kubernetes-sigs/kubebuilder/pkg/controller/predicates"
 	"github.com/kubernetes-sigs/kubebuilder/pkg/controller/types"
-	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/tools/record"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/tools/record"
 
 	torv1alpha1 "github.com/kragniz/tor-controller/pkg/apis/tor/v1alpha1"
 	torv1alpha1client "github.com/kragniz/tor-controller/pkg/client/clientset/versioned/typed/tor/v1alpha1"
@@ -17,31 +22,139 @@ import (
 	"github.com/kragniz/tor-controller/pkg/inject/args"
 )
 
+const (
+	// SuccessSynced is used as part of the Event 'reason' when a Foo is synced
+	SuccessSynced = "Synced"
+	// ErrResourceExists is used as part of the Event 'reason' when a Foo fails
+	// to sync due to a Deployment of the same name already existing.
+	ErrResourceExists = "ErrResourceExists"
+
+	// MessageResourceExists is the message used for Events when a resource
+	// fails to sync due to a Deployment already existing
+	MessageResourceExists = "Resource %q already exists and is not managed by Foo"
+	// MessageResourceSynced is the message used for an Event fired when a Foo
+	// is synced successfully
+	MessageResourceSynced = "Foo synced successfully"
+
+	deploymentNameFmt = "%s-tor-daemon"
+	configmapNameFmt  = "%s-tor-config"
+	serviceNameFmt    = "%s-tor-svc"
+)
+
 func (bc *OnionServiceController) Reconcile(k types.ReconcileKey) error {
-	log.Printf("Implement the Reconcile function on onionservice.OnionServiceController to reconcile %s\n", k.Name)
+	namespace, name := k.Namespace, k.Name
+	onionService, err := bc.onionserviceLister.OnionServices(namespace).Get(name)
+	if err != nil {
+		// The Foo resource may no longer exist, in which case we stop
+		// processing.
+		if apierrors.IsNotFound(err) {
+			runtime.HandleError(fmt.Errorf("onionService '%s' in work queue no longer exists", k))
+			return nil
+		}
+
+		return err
+	}
+
+	deploymentName := deploymentName(onionService)
+	if deploymentName == "" {
+		// We choose to absorb the error here as the worker would requeue the
+		// resource otherwise. Instead, the next time the resource is updated
+		// the resource will be queued again.
+		runtime.HandleError(fmt.Errorf("%s: deployment name must be specified", k))
+		return nil
+	}
+
+	deployment, err := bc.KubernetesInformers.Apps().V1().Deployments().Lister().Deployments(onionService.Namespace).Get(deploymentName)
+
+	// If the resource doesn't exist, we'll create it
+	newDeployment := torDeployment(onionService)
+	if apierrors.IsNotFound(err) {
+		deployment, err = bc.KubernetesClientSet.AppsV1().Deployments(onionService.Namespace).Create(newDeployment)
+	}
+
+	// If an error occurs during Get/Create, we'll requeue the item so we can
+	// attempt processing again later. This could have been caused by a
+	// temporary network failure, or any other transient reason.
+	if err != nil {
+		return err
+	}
+
+	// If the Deployment is not controlled by this Foo resource, we should log
+	// a warning to the event recorder and ret
+	if !metav1.IsControlledBy(deployment, onionService) {
+		msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
+		bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
+		return fmt.Errorf(msg)
+	}
+
+	// If the deployment specs don't match, update
+	if !deploymentEqual(deployment, newDeployment) {
+		deployment, err = bc.KubernetesClientSet.AppsV1().Deployments(onionService.Namespace).Update(newDeployment)
+	}
+
+	// If an error occurs during Update, we'll requeue the item so we can
+	// attempt processing again later. THis could have been caused by a
+	// temporary network failure, or any other transient reason.
+	if err != nil {
+		return err
+	}
+
+	// Finally, we update the status block of the OnionService resource to reflect the
+	// current state of the world
+	err = bc.updateOnionServiceStatus(onionService)
+	if err != nil {
+		return err
+	}
+
+	bc.recorder.Event(onionService, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
 	return nil
+}
+
+func (bc *OnionServiceController) updateOnionServiceStatus(onionService *torv1alpha1.OnionService) error {
+	// NEVER modify objects from the store. It's a read-only, local cache.
+	// You can use DeepCopy() to make a deep copy of original object and modify this copy
+	// Or create a copy manually for better performance
+	onionServiceCopy := onionService.DeepCopy()
+	onionServiceCopy.Status.Hostname = "toot.onion"
+	// Until #38113 is merged, we must use Update instead of UpdateStatus to
+	// update the Status block of the Foo resource. UpdateStatus will not
+	// allow changes to the Spec of the resource, which is ideal for ensuring
+	// nothing other than resource status has been updated.
+	_, err := bc.Clientset.TorV1alpha1().OnionServices(onionService.Namespace).Update(onionServiceCopy)
+	return err
+}
+
+// LookupOnionService looksup an OnionService from the lister
+func (bc *OnionServiceController) LookupOnionService(r types.ReconcileKey) (interface{}, error) {
+	return bc.Informers.Tor().V1alpha1().OnionServices().Lister().OnionServices(r.Namespace).Get(r.Name)
 }
 
 // +kubebuilder:controller:group=tor,version=v1alpha1,kind=OnionService,resource=onionservices
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:informers:group=apps,version=v1,kind=Deployment
-// +kubebuilder:rbac:groups=core,resources=services,verbs=get;watch;list
+// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:informers:group=core,version=v1,kind=Service
+// +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:informers:group=core,version=v1,kind=ConfigMap
 type OnionServiceController struct {
+	args.InjectArgs
+
 	onionserviceLister torv1alpha1lister.OnionServiceLister
 	onionserviceclient torv1alpha1client.TorV1alpha1Interface
 
 	// recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
-	onionservicerecorder record.EventRecorder
+	recorder record.EventRecorder
 }
 
 func ProvideController(arguments args.InjectArgs) (*controller.GenericController, error) {
 	bc := &OnionServiceController{
+		InjectArgs: arguments,
+
 		onionserviceLister: arguments.ControllerManager.GetInformerProvider(&torv1alpha1.OnionService{}).(torv1alpha1informer.OnionServiceInformer).Lister(),
 
-		onionserviceclient:   arguments.Clientset.TorV1alpha1(),
-		onionservicerecorder: arguments.CreateRecorder("OnionServiceController"),
+		onionserviceclient: arguments.Clientset.TorV1alpha1(),
+		recorder:           arguments.CreateRecorder("OnionServiceController"),
 	}
 
 	// Create a new controller that will call OnionServiceController.Reconcile on changes to OnionServices
@@ -54,10 +167,10 @@ func ProvideController(arguments args.InjectArgs) (*controller.GenericController
 		return gc, err
 	}
 
-	if err := gc.WatchControllerOf(&appsv1.Deployment{}, eventhandlers.Path{bc.LookupFoo},
-        predicates.ResourceVersionChanged); err != nil {
-        return gc, err
-}
+	if err := gc.WatchControllerOf(&appsv1.Deployment{}, eventhandlers.Path{bc.LookupOnionService},
+		predicates.ResourceVersionChanged); err != nil {
+		return gc, err
+	}
 
 	return gc, nil
 }
