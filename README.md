@@ -12,9 +12,13 @@ Sprinkle some onions on your kubernetes clusters.
 Quickstart
 ----------
 
+Generate a test private key:
+
+    openssl genrsa -out private_key 1024
+
 Put your private key into a secret:
 
-    kubectl create secret generic bmy7nlgozpyn26tv --from-file=private_key
+    kubectl create secret generic example-onion-key --from-file=private_key
 
 Create an onion service:
 
@@ -22,7 +26,7 @@ Create an onion service:
 apiVersion: tor.k8s.io/v1alpha1
 kind: OnionService
 metadata:
-  name: example-onion
+  name: example-onion-service
 spec:
   selector:
     app: httpd
@@ -30,7 +34,7 @@ spec:
     - targetPort: 8080
       publicPort: 80
   privateKeySecret:
-    name: bmy7nlgozpyn26tv
+    name: example-onion-key
     key: private_key
 ```
 
