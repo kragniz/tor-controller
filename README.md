@@ -38,7 +38,15 @@ spec:
     key: private_key
 ```
 
-This creates:
+List active OnionServices:
+
+```
+$ kubectl get onionservices -o=custom-columns=NAME:.metadata.name,HOSTNAME:.status.hostname
+NAME                    HOSTNAME
+example-onion-service   h7px2yyugjqkztrb.onion
+```
+
+tor-controller creates the following resources for each OnionService:
 
 - a service, which is used to send traffic to application pods
 - a configmap containing tor configuration pointing at the service
