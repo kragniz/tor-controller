@@ -34,9 +34,11 @@ spec:
     key: private_key
 ```
 
-This creates a corresponding tor daemon pod, which serves incoming traffic from
-the tor network, and a service, which is used to send traffic to application
-pods:
+This creates:
+
+- a service, which is used to send traffic to application pods
+- a configmap containing tor configuration pointing at the service
+- tor daemon pod, which serves incoming traffic from the tor network
 
 <p align="center">
   <img src="https://sr.ht/6WbX.png">
