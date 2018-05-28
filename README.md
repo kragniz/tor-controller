@@ -9,10 +9,10 @@ tor-controller
 
 Sprinkle some onions on your kubernetes clusters.
 
-Use
----
+Quickstart
+----------
 
-Get your private key into a secret:
+Put your private key into a secret:
 
     kubectl create secret generic bmy7nlgozpyn26tv --from-file=private_key
 
@@ -33,3 +33,11 @@ spec:
     name: bmy7nlgozpyn26tv
     key: private_key
 ```
+
+This creates a corresponding tor daemon pod, which serves incoming traffic from
+the tor network, and a service, which is used to send traffic to application
+pods:
+
+<p align="center">
+  <img src="https://sr.ht/6WbX.png">
+</p>
