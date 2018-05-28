@@ -5,6 +5,8 @@
 tor-controller
 ==============
 
+[![Build Status](https://img.shields.io/travis-ci/kragniz/tor-controller.svg?style=flat-square)](https://travis-ci.org/kragniz/tor-controller)
+
 Sprinkle some onions on your kubernetes clusters.
 
 Use
