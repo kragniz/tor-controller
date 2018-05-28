@@ -19,6 +19,7 @@ import (
 	torv1alpha1lister "github.com/kragniz/tor-controller/pkg/client/listers/tor/v1alpha1"
 
 	"github.com/kragniz/tor-controller/pkg/inject/args"
+	"github.com/kragniz/tor-controller/pkg/onionaddr"
 )
 
 const (
@@ -81,16 +82,26 @@ func (bc *OnionServiceController) Reconcile(k types.ReconcileKey) error {
 }
 
 func (bc *OnionServiceController) updateOnionServiceStatus(onionService *torv1alpha1.OnionService) error {
-	// NEVER modify objects from the store. It's a read-only, local cache.
-	// You can use DeepCopy() to make a deep copy of original object and modify this copy
-	// Or create a copy manually for better performance
 	onionServiceCopy := onionService.DeepCopy()
-	onionServiceCopy.Status.Hostname = "toot.onion"
+
+	privKeySecret, err := bc.KubernetesInformers.Core().V1().Secrets().Lister().Secrets(onionService.Namespace).Get(onionService.Spec.PrivateKeySecret.Name)
+	if err != nil {
+		return err
+	}
+
+	privKey := privKeySecret.Data[onionService.Spec.PrivateKeySecret.Key]
+	hostname, err := onionaddr.GetAddress(privKey)
+	if err != nil {
+		return err
+	}
+
+	onionServiceCopy.Status.Hostname = hostname
+
 	// Until #38113 is merged, we must use Update instead of UpdateStatus to
 	// update the Status block of the Foo resource. UpdateStatus will not
 	// allow changes to the Spec of the resource, which is ideal for ensuring
 	// nothing other than resource status has been updated.
-	_, err := bc.Clientset.TorV1alpha1().OnionServices(onionService.Namespace).Update(onionServiceCopy)
+	_, err = bc.Clientset.TorV1alpha1().OnionServices(onionService.Namespace).Update(onionServiceCopy)
 	return err
 }
 
