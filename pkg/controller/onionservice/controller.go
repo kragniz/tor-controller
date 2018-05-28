@@ -106,6 +106,8 @@ func (bc *OnionServiceController) LookupOnionService(r types.ReconcileKey) (inte
 // +kubebuilder:informers:group=core,version=v1,kind=Service
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:informers:group=core,version=v1,kind=ConfigMap
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:informers:group=core,version=v1,kind=Secret
 type OnionServiceController struct {
 	args.InjectArgs
 
