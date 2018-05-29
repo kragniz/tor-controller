@@ -81,3 +81,58 @@ spec:
     name: nginx-onion-key
     key: private_key
 ```
+
+This can then be used in the same way any other ingress is. Here's a full
+example, with a default backend and a subdomain:
+
+```yaml
+apiVersion: extensions/v1
+kind: Deployment
+metadata:
+  name: http-app
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: http-app
+    spec:
+      containers:
+      - name: http-app
+        image: gcr.io/google_containers/echoserver:1.8
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: http-app
+  labels:
+    app: http-app
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: http-app
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: http-app
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  backend:
+    serviceName: default-http-backend
+    servicePort: 80
+  rules:
+  - host: echoserver.h7px3yyugjqkztrb.onion
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: http-app
+          servicePort: 8080
+```
