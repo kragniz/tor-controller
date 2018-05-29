@@ -54,3 +54,30 @@ tor-controller creates the following resources for each OnionService:
 <p align="center">
   <img src="https://sr.ht/6WbX.png">
 </p>
+
+Using with nginx ingress
+------------------------
+
+tor-controller on its own simply directs TCP traffic to a backend service.
+If you want to serve HTTP stuff, you'll probably want to pair it with nginx-ingress.
+
+To do this, first install nginx-ingress normally. Then point an onion service
+at the nginx-ingress-controller, for example:
+
+```yaml
+apiVersion: tor.k8s.io/v1alpha1
+kind: OnionService
+metadata:
+  name: nginx-onion-service
+spec:
+  ports:
+  - publicPort: 80
+    targetPort: 80
+    name: http
+  selector:
+    app: nginx-ingress-controller
+    name: nginx-ingress-controller
+  privateKeySecret:
+    name: nginx-onion-key
+    key: private_key
+```
