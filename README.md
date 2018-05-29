@@ -2,8 +2,7 @@
   <img height="300" src="https://sr.ht/2mc0.png">
 </p>
 
-tor-controller
-==============
+<h1 align="center">tor-controller</h1>
 
 [![Build Status](https://img.shields.io/travis-ci/kragniz/tor-controller.svg?style=flat-square)](https://travis-ci.org/kragniz/tor-controller)
 
