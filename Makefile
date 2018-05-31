@@ -10,3 +10,6 @@ tor-controller_docker:
 	docker build . -f Dockerfile.controller -t kragniz/tor-controller-manager:latest
 
 images: tor-daemon_docker tor-controller_docker
+
+install.yaml:
+	kubebuilder create config --name=tor-controller --controller-image=kragniz/tor-controller-manager:latest --output=install.yaml
