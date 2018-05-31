@@ -12,4 +12,4 @@ tor-controller_docker:
 images: tor-daemon_docker tor-controller_docker
 
 install.yaml:
-	kubebuilder create config --name=tor-controller --controller-image=kragniz/tor-controller-manager:latest --output=install.yaml
+	kubebuilder create config --name=tor-controller --controller-image=kragniz/tor-controller-manager:latest --output=hack/install.yaml
