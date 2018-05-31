@@ -1,0 +1,217 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  labels:
+    api: tor-controller
+    kubebuilder.k8s.io: master
+  name: tor-controller-system
+spec: {}
+status: {}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  labels:
+    api: tor-controller
+    kubebuilder.k8s.io: master
+  name: tor-controller-role
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - tor.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  creationTimestamp: null
+  labels:
+    api: tor-controller
+    kubebuilder.k8s.io: master
+  name: tor-controller-rolebinding
+  namespace: tor-controller-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tor-controller-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: tor-controller-system
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  labels:
+    api: tor-controller
+    kubebuilder.k8s.io: master
+  name: onionservices.tor.k8s.io
+spec:
+  group: tor.k8s.io
+  names:
+    kind: OnionService
+    plural: onionservices
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            extraConfig:
+              type: string
+            ports:
+              items:
+                properties:
+                  name:
+                    type: string
+                  publicPort:
+                    type: int32
+                  targetPort:
+                    type: int32
+                type: object
+              type: array
+            privateKeySecret:
+              properties:
+                key:
+                  type: string
+                name:
+                  type: string
+              type: object
+            selector:
+              type: object
+          type: object
+        status:
+          properties:
+            hostname:
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: null
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    api: tor-controller
+    control-plane: controller-manager
+    kubebuilder.k8s.io: master
+  name: tor-controller-controller-manager-service
+  namespace: tor-controller-system
+spec:
+  clusterIP: None
+  selector:
+    api: tor-controller
+    control-plane: controller-manager
+    kubebuilder.k8s.io: master
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  creationTimestamp: null
+  labels:
+    api: tor-controller
+    control-plane: controller-manager
+    kubebuilder.k8s.io: master
+  name: tor-controller-controller-manager
+  namespace: tor-controller-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      api: tor-controller
+      control-plane: controller-manager
+      kubebuilder.k8s.io: master
+  serviceName: tor-controller-controller-manager-service
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        api: tor-controller
+        control-plane: controller-manager
+        kubebuilder.k8s.io: master
+    spec:
+      containers:
+      - args:
+        - --install-crds=false
+        command:
+        - /root/controller-manager
+        image: kragniz/tor-controller-manager:latest
+        name: controller-manager
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+      terminationGracePeriodSeconds: 10
+  updateStrategy: {}
+status:
+  replicas: 0
