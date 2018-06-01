@@ -15,6 +15,30 @@ Install tor-controller:
 
     $ kubectl apply -f hack/install.yaml
 
+Create some deployment to test against, in this example we'll deploy an echoserver. Create `echoserver.yaml`:
+
+```yaml
+apiVersion: extensions/v1
+kind: Deployment
+metadata:
+  name: http-app
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: http-app
+    spec:
+      containers:
+      - name: http-app
+        image: gcr.io/google_containers/echoserver:1.8
+        ports:
+        - containerPort: 8080
+```
+Apply it:
+
+    $ kubectl apply -f echoserver.yaml
+
 Generate a test private key:
 
     $ openssl genrsa -out private_key 1024
