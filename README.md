@@ -63,11 +63,12 @@ tor-controller creates the following resources for each OnionService:
   <img src="https://sr.ht/6WbX.png">
 </p>
 
-Using with nginx ingress
+Using with nginx-ingress
 ------------------------
 
 tor-controller on its own simply directs TCP traffic to a backend service.
-If you want to serve HTTP stuff, you'll probably want to pair it with nginx-ingress.
+If you want to serve HTTP stuff, you'll probably want to pair it with
+nginx-ingress or some other ingress controller.
 
 To do this, first install nginx-ingress normally. Then point an onion service
 at the nginx-ingress-controller, for example:
