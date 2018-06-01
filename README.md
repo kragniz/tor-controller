@@ -21,9 +21,9 @@ Generate a test private key:
 
 Put your private key into a secret:
 
-    kubectl create secret generic example-onion-key --from-file=private_key
+    $ kubectl create secret generic example-onion-key --from-file=private_key
 
-Create an onion service:
+Create an onion service, `onionservice.yaml`:
 
 ```yaml
 apiVersion: tor.k8s.io/v1alpha1
@@ -40,6 +40,10 @@ spec:
     name: example-onion-key
     key: private_key
 ```
+
+Apply it:
+
+    $ kubectl apply -f onionservice.yaml
 
 List active OnionServices:
 
