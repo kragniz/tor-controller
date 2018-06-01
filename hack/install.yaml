@@ -3,9 +3,9 @@ kind: Namespace
 metadata:
   creationTimestamp: null
   labels:
-    api: tor-controller
+    api: tor
     kubebuilder.k8s.io: master
-  name: tor-controller-system
+  name: tor-system
 spec: {}
 status: {}
 ---
@@ -14,9 +14,9 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   labels:
-    api: tor-controller
+    api: tor
     kubebuilder.k8s.io: master
-  name: tor-controller-role
+  name: tor-role
 rules:
 - apiGroups:
   - apps
@@ -78,25 +78,25 @@ kind: ClusterRoleBinding
 metadata:
   creationTimestamp: null
   labels:
-    api: tor-controller
+    api: tor
     kubebuilder.k8s.io: master
-  name: tor-controller-rolebinding
-  namespace: tor-controller-system
+  name: tor-rolebinding
+  namespace: tor-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: tor-controller-role
+  name: tor-role
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: tor-controller-system
+  namespace: tor-system
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    api: tor-controller
+    api: tor
     kubebuilder.k8s.io: master
   name: onionservices.tor.k8s.io
 spec:
@@ -159,15 +159,15 @@ kind: Service
 metadata:
   creationTimestamp: null
   labels:
-    api: tor-controller
+    api: tor
     control-plane: controller-manager
     kubebuilder.k8s.io: master
-  name: tor-controller-controller-manager-service
-  namespace: tor-controller-system
+  name: tor-controller-manager-service
+  namespace: tor-system
 spec:
   clusterIP: None
   selector:
-    api: tor-controller
+    api: tor
     control-plane: controller-manager
     kubebuilder.k8s.io: master
 status:
@@ -178,24 +178,24 @@ kind: StatefulSet
 metadata:
   creationTimestamp: null
   labels:
-    api: tor-controller
+    api: tor
     control-plane: controller-manager
     kubebuilder.k8s.io: master
-  name: tor-controller-controller-manager
-  namespace: tor-controller-system
+  name: tor-controller-manager
+  namespace: tor-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      api: tor-controller
+      api: tor
       control-plane: controller-manager
       kubebuilder.k8s.io: master
-  serviceName: tor-controller-controller-manager-service
+  serviceName: tor-controller-manager-service
   template:
     metadata:
       creationTimestamp: null
       labels:
-        api: tor-controller
+        api: tor
         control-plane: controller-manager
         kubebuilder.k8s.io: master
     spec:
