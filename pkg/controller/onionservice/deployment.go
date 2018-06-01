@@ -110,7 +110,7 @@ func torDeployment(onion *torv1alpha1.OnionService) *appsv1.Deployment {
 								"-f",
 								"/etc/tor/tor-config",
 							},
-							ImagePullPolicy: "Never",
+							ImagePullPolicy: "IfNotPresent",
 
 							VolumeMounts: []corev1.VolumeMount{
 								{
