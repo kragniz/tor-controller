@@ -11,9 +11,13 @@ Sprinkle some onions on your kubernetes clusters.
 Quickstart
 ----------
 
+Install tor-controller:
+
+    $ kubectl apply -f hack/install.yaml
+
 Generate a test private key:
 
-    openssl genrsa -out private_key 1024
+    $ openssl genrsa -out private_key 1024
 
 Put your private key into a secret:
 
