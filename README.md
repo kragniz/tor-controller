@@ -18,12 +18,15 @@ Install tor-controller:
 Create some deployment to test against, in this example we'll deploy an echoserver. Create `echoserver.yaml`:
 
 ```yaml
-apiVersion: extensions/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: http-app
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app: http-app
   template:
     metadata:
       labels:
@@ -56,7 +59,7 @@ metadata:
   name: example-onion-service
 spec:
   selector:
-    app: httpd
+    app: http-app
   ports:
     - targetPort: 8080
       publicPort: 80
@@ -119,12 +122,15 @@ This can then be used in the same way any other ingress is. Here's a full
 example, with a default backend and a subdomain:
 
 ```yaml
-apiVersion: extensions/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: http-app
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app: http-app
   template:
     metadata:
       labels:
