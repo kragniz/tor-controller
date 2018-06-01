@@ -66,7 +66,7 @@ func torService(onion *torv1alpha1.OnionService) *corev1.Service {
 		port := corev1.ServicePort{
 			Name:       p.Name,
 			TargetPort: intstr.FromInt(int(p.TargetPort)),
-			Port:       p.PublicPort,
+			Port:       p.TargetPort,
 		}
 		ports = append(ports, port)
 	}
