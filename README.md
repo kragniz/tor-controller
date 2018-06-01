@@ -8,6 +8,10 @@
 
 Sprinkle some onions on your kubernetes clusters.
 
+tor-controller allows you to create `OnionService` resources in kubernetes.
+These services are used similarly to standard kubernetes services, but they serve
+traffic on the tor network.
+
 Quickstart
 ----------
 
