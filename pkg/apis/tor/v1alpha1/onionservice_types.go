@@ -17,7 +17,7 @@ type OnionServiceSpec struct {
 
 	// +kubebuilder:validation:Maximum=3
 	// +kubebuilder:validation:Minimum=2
-	Version int `json:"version"`
+	Version *int32 `json:"version"`
 
 	ExtraConfig string `json:"extraConfig,omitempty"`
 }

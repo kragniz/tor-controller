@@ -121,8 +121,10 @@ var (
 									Type: "object",
 								},
 								"version": v1beta1.JSONSchemaProps{
-									Type:   "integer",
-									Format: "int64",
+									Maximum: getFloat(3),
+									Minimum: getFloat(2),
+									Type:    "integer",
+									Format:  "int32",
 								},
 							},
 						},

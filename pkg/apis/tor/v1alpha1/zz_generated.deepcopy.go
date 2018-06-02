@@ -85,6 +85,15 @@ func (in *OnionServiceSpec) DeepCopyInto(out *OnionServiceSpec) {
 		}
 	}
 	out.PrivateKeySecret = in.PrivateKeySecret
+	if in.Version != nil {
+		in, out := &in.Version, &out.Version
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(int32)
+			**out = **in
+		}
+	}
 	return
 }
 
