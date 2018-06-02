@@ -140,6 +140,11 @@ spec:
               type: object
             selector:
               type: object
+            version:
+              format: int64
+              maximum: 3
+              minimum: 2
+              type: integer
           type: object
         status:
           properties:

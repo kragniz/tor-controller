@@ -48,6 +48,10 @@ func getFloat(f float64) *float64 {
 	return &f
 }
 
+func getInt(i int64) *int64 {
+	return &i
+}
+
 var (
 	// Define CRDs for resources
 	OnionServiceCRD = v1beta1.CustomResourceDefinition{
@@ -115,6 +119,10 @@ var (
 								},
 								"selector": v1beta1.JSONSchemaProps{
 									Type: "object",
+								},
+								"version": v1beta1.JSONSchemaProps{
+									Type:   "integer",
+									Format: "int64",
 								},
 							},
 						},
