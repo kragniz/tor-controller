@@ -18,6 +18,7 @@ import (
 const configFormat = `
 SocksPort 0
 HiddenServiceDir {{ .ServiceDir }}
+HiddenServiceVersion {{ .Version }}
 {{ range .Ports }}
 HiddenServicePort {{ .PublicPort }} {{ $.ServiceClusterIP }}:{{ .ServicePort }}
 {{ end }}
@@ -30,6 +31,7 @@ type onionService struct {
 	ServiceNamespace string
 	ServiceClusterIP string
 	ServiceDir       string
+	Version          int
 	Ports            []portPair
 }
 
@@ -58,6 +60,7 @@ func buildTorConfig(onion *torv1alpha1.OnionService, serviceClusterIP string) (s
 		ServiceClusterIP: serviceClusterIP,
 		ServiceDir:       "/run/tor/service",
 		Ports:            ports,
+		Version:          onion.Spec.GetVersion(),
 	}
 
 	var tmp bytes.Buffer
