@@ -15,9 +15,8 @@ type OnionServiceSpec struct {
 
 	PrivateKeySecret SecretReference `json:"privateKeySecret"`
 
-	// +kubebuilder:validation:Maximum=3
-	// +kubebuilder:validation:Minimum=2
-	Version *int32 `json:"version"`
+	// +kubebuilder:validation:Enum=0,2,3
+	Version int32 `json:"version"`
 
 	ExtraConfig string `json:"extraConfig,omitempty"`
 }
