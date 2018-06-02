@@ -121,10 +121,9 @@ var (
 									Type: "object",
 								},
 								"version": v1beta1.JSONSchemaProps{
-									Maximum: getFloat(3),
-									Minimum: getFloat(2),
-									Type:    "integer",
-									Format:  "int32",
+									Type:   "integer",
+									Format: "int32",
+									Enum:   []v1beta1.JSON{v1beta1.JSON{[]byte{48}}, v1beta1.JSON{[]byte{50}}, v1beta1.JSON{[]byte{51}}},
 								},
 							},
 						},
