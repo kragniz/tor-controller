@@ -159,5 +159,10 @@ func ProvideController(arguments args.InjectArgs) (*controller.GenericController
 		return gc, err
 	}
 
+	if err := gc.WatchControllerOf(&corev1.Service{}, eventhandlers.Path{bc.LookupOnionService},
+		predicates.ResourceVersionChanged); err != nil {
+		return gc, err
+	}
+
 	return gc, nil
 }
