@@ -13,12 +13,8 @@ import (
 	torv1alpha1 "github.com/kragniz/tor-controller/pkg/apis/tor/v1alpha1"
 )
 
-func serviceName(onion *torv1alpha1.OnionService) string {
-	return fmt.Sprintf(serviceNameFmt, onion.Name)
-}
-
 func (bc *OnionServiceController) reconcileService(onionService *torv1alpha1.OnionService) error {
-	serviceName := serviceName(onionService)
+	serviceName := onionService.ServiceName()
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated

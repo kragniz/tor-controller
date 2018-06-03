@@ -1,4 +1,4 @@
-package onionservice
+package config
 
 import (
 	"bytes"

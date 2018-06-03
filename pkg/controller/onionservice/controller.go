@@ -36,10 +36,6 @@ const (
 	// MessageResourceSynced is the message used for an Event fired when a Foo
 	// is synced successfully
 	MessageResourceSynced = "Foo synced successfully"
-
-	deploymentNameFmt = "%s-tor-daemon"
-	configmapNameFmt  = "%s-tor-config"
-	serviceNameFmt    = "%s-tor-svc"
 )
 
 func (bc *OnionServiceController) Reconcile(k types.ReconcileKey) error {
@@ -92,7 +88,7 @@ func (bc *OnionServiceController) updateOnionServiceStatus(onionService *torv1al
 	}
 	onionServiceCopy.Status.Hostname = hostname
 
-	serviceName := serviceName(onionService)
+	serviceName := onionService.ServiceName()
 	service, err := bc.KubernetesInformers.Core().V1().Services().Lister().Services(onionService.Namespace).Get(serviceName)
 	clusterIP := ""
 	if errors.IsNotFound(err) {
