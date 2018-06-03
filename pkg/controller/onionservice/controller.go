@@ -9,6 +9,7 @@ import (
 	"github.com/kubernetes-sigs/kubebuilder/pkg/controller/types"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/record"
@@ -94,8 +95,20 @@ func (bc *OnionServiceController) updateOnionServiceStatus(onionService *torv1al
 	if err != nil {
 		return err
 	}
-
 	onionServiceCopy.Status.Hostname = hostname
+
+	serviceName := serviceName(onionService)
+	service, err := bc.KubernetesInformers.Core().V1().Services().Lister().Services(onionService.Namespace).Get(serviceName)
+	clusterIP := ""
+	if errors.IsNotFound(err) {
+		clusterIP = "0.0.0.0"
+	} else if err != nil {
+		return err
+	} else {
+		clusterIP = service.Spec.ClusterIP
+	}
+
+	onionServiceCopy.Status.TargetClusterIP = clusterIP
 
 	// Until #38113 is merged, we must use Update instead of UpdateStatus to
 	// update the Status block of the Foo resource. UpdateStatus will not
