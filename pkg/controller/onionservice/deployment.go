@@ -114,12 +114,6 @@ func torDeployment(onion *torv1alpha1.OnionService) *appsv1.Deployment {
 									MountPath: "/run/tor/service/private_key",
 									SubPath:   onion.Spec.PrivateKeySecret.Key,
 								},
-								{
-									Name:      torConfigVolume,
-									MountPath: "/etc/tor/tor-config",
-									SubPath:   "tor-config",
-									ReadOnly:  true,
-								},
 							},
 						},
 					},
@@ -129,16 +123,6 @@ func torDeployment(onion *torv1alpha1.OnionService) *appsv1.Deployment {
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
 									SecretName: onion.Spec.PrivateKeySecret.Name,
-								},
-							},
-						},
-						{
-							Name: torConfigVolume,
-							VolumeSource: corev1.VolumeSource{
-								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: fmt.Sprintf(configmapNameFmt, onion.Name),
-									},
 								},
 							},
 						},
