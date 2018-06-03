@@ -152,6 +152,8 @@ spec:
           properties:
             hostname:
               type: string
+            targetClusterIP:
+              type: string
           type: object
       type: object
   version: v1alpha1
