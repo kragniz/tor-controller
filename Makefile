@@ -2,6 +2,7 @@
 
 build:
 	go build -o tor-controller-manager cmd/controller-manager/main.go
+	go build -o tor-local-manager cmd/tor-local-manager/main.go
 
 tor-daemon_docker:
 	docker build . -f tor-daemon/Dockerfile -t kragniz/tor-daemon:latest
