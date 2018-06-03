@@ -54,7 +54,8 @@ type SecretReference struct {
 
 // OnionServiceStatus defines the observed state of OnionService
 type OnionServiceStatus struct {
-	Hostname string `json:"hostname"`
+	Hostname        string `json:"hostname"`
+	TargetClusterIP string `json:"targetClusterIP"`
 }
 
 // +genclient

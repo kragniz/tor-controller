@@ -133,6 +133,9 @@ var (
 								"hostname": v1beta1.JSONSchemaProps{
 									Type: "string",
 								},
+								"targetClusterIP": v1beta1.JSONSchemaProps{
+									Type: "string",
+								},
 							},
 						},
 					},
