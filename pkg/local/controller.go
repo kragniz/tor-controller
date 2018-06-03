@@ -2,6 +2,7 @@ package local
 
 import (
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -10,6 +11,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/kragniz/tor-controller/pkg/apis/tor/v1alpha1"
+	"github.com/kragniz/tor-controller/pkg/config"
 )
 
 type Controller struct {
@@ -53,6 +55,21 @@ func (c *Controller) sync(key string) error {
 		onionService := obj.(*v1alpha1.OnionService)
 
 		fmt.Printf("updating onion config for %s/%s\n", onionService.Namespace, onionService.Name)
+
+		torConfig, err := config.TorConfigForService(onionService)
+		if err != nil {
+			fmt.Printf("Generating config failed with %v\n", err)
+			return err
+		}
+
+		err = ioutil.WriteFile("/run/tor/torfile", []byte(torConfig), 0644)
+		if err != nil {
+			fmt.Printf("Writing config failed with %v\n", err)
+			return err
+		}
+
+		c.localManager.daemon.Reload()
+
 	}
 	return nil
 }
