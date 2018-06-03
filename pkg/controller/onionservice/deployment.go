@@ -103,8 +103,10 @@ func torDeployment(onion *torv1alpha1.OnionService) *appsv1.Deployment {
 							Name:  "tor",
 							Image: "kragniz/tor-daemon:latest",
 							Args: []string{
-								"-f",
-								"/etc/tor/tor-config",
+								"-name",
+								onion.Name,
+								"-namespace",
+								onion.Namespace,
 							},
 							ImagePullPolicy: "IfNotPresent",
 
