@@ -20,7 +20,6 @@ import (
 	torv1alpha1lister "github.com/kragniz/tor-controller/pkg/client/listers/tor/v1alpha1"
 
 	"github.com/kragniz/tor-controller/pkg/inject/args"
-	"github.com/kragniz/tor-controller/pkg/onionaddr"
 )
 
 const (
@@ -49,6 +48,21 @@ func (bc *OnionServiceController) Reconcile(k types.ReconcileKey) error {
 			return nil
 		}
 
+		return err
+	}
+
+	err = bc.reconcileServiceAccount(onionService)
+	if err != nil {
+		return err
+	}
+
+	err = bc.reconcileRole(onionService)
+	if err != nil {
+		return err
+	}
+
+	err = bc.reconcileRolebinding(onionService)
+	if err != nil {
 		return err
 	}
 
@@ -155,6 +169,11 @@ func ProvideController(arguments args.InjectArgs) (*controller.GenericController
 	}
 
 	if err := gc.WatchControllerOf(&appsv1.Deployment{}, eventhandlers.Path{bc.LookupOnionService},
+		predicates.ResourceVersionChanged); err != nil {
+		return gc, err
+	}
+
+	if err := gc.WatchControllerOf(&corev1.Pod{}, eventhandlers.Path{bc.LookupOnionService},
 		predicates.ResourceVersionChanged); err != nil {
 		return gc, err
 	}
