@@ -62,6 +62,7 @@ kind: OnionService
 metadata:
   name: example-onion-service
 spec:
+  version: 2
   selector:
     app: http-app
   ports:
@@ -110,13 +111,14 @@ kind: OnionService
 metadata:
   name: nginx-onion-service
 spec:
+  version: 2
+  selector:
+    app: nginx-ingress-controller
+    name: nginx-ingress-controller
   ports:
   - publicPort: 80
     targetPort: 80
     name: http
-  selector:
-    app: nginx-ingress-controller
-    name: nginx-ingress-controller
   privateKeySecret:
     name: nginx-onion-key
     key: private_key
