@@ -90,18 +90,6 @@ func (bc *OnionServiceController) Reconcile(k types.ReconcileKey) error {
 func (bc *OnionServiceController) updateOnionServiceStatus(onionService *torv1alpha1.OnionService) error {
 	onionServiceCopy := onionService.DeepCopy()
 
-	privKeySecret, err := bc.KubernetesInformers.Core().V1().Secrets().Lister().Secrets(onionService.Namespace).Get(onionService.Spec.PrivateKeySecret.Name)
-	if err != nil {
-		return err
-	}
-
-	privKey := privKeySecret.Data[onionService.Spec.PrivateKeySecret.Key]
-	hostname, err := onionaddr.GetAddress(privKey)
-	if err != nil {
-		return err
-	}
-	onionServiceCopy.Status.Hostname = hostname
-
 	serviceName := onionService.ServiceName()
 	service, err := bc.KubernetesInformers.Core().V1().Services().Lister().Services(onionService.Namespace).Get(serviceName)
 	clusterIP := ""
