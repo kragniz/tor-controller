@@ -12,12 +12,58 @@ tor-controller allows you to create `OnionService` resources in kubernetes.
 These services are used similarly to standard kubernetes services, but they serve
 traffic on the tor network.
 
-Quickstart
-----------
+tor-controller creates the following resources for each OnionService:
+
+- a service, which is used to send traffic to application pods
+- tor pod, which contains a tor daemon to serve incoming traffic from the tor
+  network, and a management process that watches the kubernetes API and
+  generates tor config, signaling the tor daemon when it changes
+- rbac rules
+
+<p align="center">
+  <img src="https://sr.ht/6WbX.png">
+</p>
+
+Install
+-------
 
 Install tor-controller:
 
     $ kubectl apply -f hack/install.yaml
+
+Quickstart with random address
+------------------------------
+
+Create an onion service, `onionservice.yaml`:
+
+```yaml
+apiVersion: tor.k8s.io/v1alpha1
+kind: OnionService
+metadata:
+  name: basic-onion-service
+spec:
+  version: 2
+  selector:
+    app: example
+  ports:
+  - publicPort: 80
+    targetPort: 80
+```
+
+Apply it:
+
+    $ kubectl apply -f onionservice.yaml
+
+View it:
+
+```bash
+$ kubectl get onionservices -o=custom-columns=NAME:.metadata.name,HOSTNAME:.status.hostname
+NAME                    HOSTNAME
+basic-onion-service     h7px2yyugjqkztrb.onion
+```
+
+Exposing a deployment with a fixed address
+------------------------------------------
 
 Create some deployment to test against, in this example we'll deploy an echoserver. Create `echoserver.yaml`:
 
@@ -46,7 +92,9 @@ Apply it:
 
     $ kubectl apply -f echoserver.yaml
 
-Generate a test private key:
+For a fixed address, we need a private key. This should be kept safe, since
+someone can impersonate your onion service if it is leaked.
+Generate an RSA private key (only valid for v2 onion services, v3 services use Ed25519 instead):
 
     $ openssl genrsa -out private_key 1024
 
@@ -54,7 +102,7 @@ Put your private key into a secret:
 
     $ kubectl create secret generic example-onion-key --from-file=private_key
 
-Create an onion service, `onionservice.yaml`:
+Create an onion service, `onionservice.yaml`, referencing the private key we just created:
 
 ```yaml
 apiVersion: tor.k8s.io/v1alpha1
@@ -82,18 +130,34 @@ List active OnionServices:
 ```
 $ kubectl get onionservices -o=custom-columns=NAME:.metadata.name,HOSTNAME:.status.hostname
 NAME                    HOSTNAME
-example-onion-service   h7px2yyugjqkztrb.onion
+example-onion-service   s2c6qry5bj57vyms.onion
 ```
 
-tor-controller creates the following resources for each OnionService:
-
-- a service, which is used to send traffic to application pods
-- a configmap containing tor configuration pointing at the service
-- tor daemon pod, which serves incoming traffic from the tor network
+This service should now be accessable from any tor client,
+for example [Tor Browser](https://www.torproject.org/projects/torbrowser.html.en):
 
 <p align="center">
-  <img src="https://sr.ht/6WbX.png">
+  <img src="https://sr.ht/FLbP.png">
 </p>
+
+Random service names
+--------------------
+
+If `spec.privateKeySecret` is not specified, tor-controller will start a service with a random name.
+This will remain in use until the tor-daemon pod restarts or is terminated for some other reason.
+
+Onion service versions
+----------------------
+
+The `spec.version` field specifies which onion protocol to use.
+v2 is the classic and well supported, v3 is the new replacement.
+
+The biggest difference from a user's point of view is the length of addresses. v2
+service names are short, like `x3yvl2svtqgzhcyz.onion`. v3 are longer, like
+`ljgpby5ba3xi5osslpdvqsumdb4sbclb2amxtm6a3cwnq7w7sj72noid.onion`.
+
+tor-controller defaults to using v3 if `spec.version` is not specified.
+
 
 Using with nginx-ingress
 ------------------------
