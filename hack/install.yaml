@@ -79,7 +79,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - rbac
+  - rbac.authorization.k8s.io
   resources:
   - roles
   verbs:
@@ -91,9 +91,21 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - rbac
+  - rbac.authorization.k8s.io
   resources:
   - rolebindings
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
   verbs:
   - get
   - list
