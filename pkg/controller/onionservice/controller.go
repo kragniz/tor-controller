@@ -116,15 +116,21 @@ func (bc *OnionServiceController) LookupOnionService(r types.ReconcileKey) (inte
 	return bc.Informers.Tor().V1alpha1().OnionServices().Lister().OnionServices(r.Namespace).Get(r.Name)
 }
 
+// +kubebuilder:informers:group=core,version=v1,kind=Pod
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:controller:group=tor,version=v1alpha1,kind=OnionService,resource=onionservices
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:informers:group=apps,version=v1,kind=Deployment
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:informers:group=core,version=v1,kind=Service
-// +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:informers:group=core,version=v1,kind=ConfigMap
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:informers:group=core,version=v1,kind=Secret
+// +kubebuilder:rbac:groups=core,resources=serviceaccounts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:informers:group=core,version=v1,kind=ServiceAccount
+// +kubebuilder:rbac:groups=rbac,resources=roles,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:informers:group=rbac,version=v1,kind=Role
+// +kubebuilder:rbac:groups=rbac,resources=rolebindings,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:informers:group=rbac,version=v1,kind=RoleBinding
 type OnionServiceController struct {
 	args.InjectArgs
 

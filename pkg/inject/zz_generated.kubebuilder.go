@@ -25,13 +25,22 @@ func init() {
 		}
 
 		// Add Kubernetes informers
+		if err := arguments.ControllerManager.AddInformerProvider(&corev1.ServiceAccount{}, arguments.KubernetesInformers.Core().V1().ServiceAccounts()); err != nil {
+			return err
+		}
+		if err := arguments.ControllerManager.AddInformerProvider(&rbacv1.Role{}, arguments.KubernetesInformers.Rbac().V1().Roles()); err != nil {
+			return err
+		}
+		if err := arguments.ControllerManager.AddInformerProvider(&rbacv1.RoleBinding{}, arguments.KubernetesInformers.Rbac().V1().RoleBindings()); err != nil {
+			return err
+		}
+		if err := arguments.ControllerManager.AddInformerProvider(&corev1.Pod{}, arguments.KubernetesInformers.Core().V1().Pods()); err != nil {
+			return err
+		}
 		if err := arguments.ControllerManager.AddInformerProvider(&appsv1.Deployment{}, arguments.KubernetesInformers.Apps().V1().Deployments()); err != nil {
 			return err
 		}
 		if err := arguments.ControllerManager.AddInformerProvider(&corev1.Service{}, arguments.KubernetesInformers.Core().V1().Services()); err != nil {
-			return err
-		}
-		if err := arguments.ControllerManager.AddInformerProvider(&corev1.ConfigMap{}, arguments.KubernetesInformers.Core().V1().ConfigMaps()); err != nil {
 			return err
 		}
 		if err := arguments.ControllerManager.AddInformerProvider(&corev1.Secret{}, arguments.KubernetesInformers.Core().V1().Secrets()); err != nil {
@@ -53,6 +62,28 @@ func init() {
 		APIGroups: []string{"tor.k8s.io"},
 		Resources: []string{"*"},
 		Verbs:     []string{"*"},
+	})
+	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
+		APIGroups: []string{
+			"rbac",
+		},
+		Resources: []string{
+			"rolebindings",
+		},
+		Verbs: []string{
+			"create", "delete", "get", "list", "patch", "update", "watch",
+		},
+	})
+	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
+		APIGroups: []string{
+			"",
+		},
+		Resources: []string{
+			"pods",
+		},
+		Verbs: []string{
+			"create", "delete", "get", "list", "patch", "update", "watch",
+		},
 	})
 	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
 		APIGroups: []string{
@@ -81,7 +112,7 @@ func init() {
 			"",
 		},
 		Resources: []string{
-			"configmaps",
+			"secrets",
 		},
 		Verbs: []string{
 			"create", "delete", "get", "list", "patch", "update", "watch",
@@ -92,7 +123,18 @@ func init() {
 			"",
 		},
 		Resources: []string{
-			"secrets",
+			"serviceaccounts",
+		},
+		Verbs: []string{
+			"create", "delete", "get", "list", "patch", "update", "watch",
+		},
+	})
+	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
+		APIGroups: []string{
+			"rbac",
+		},
+		Resources: []string{
+			"roles",
 		},
 		Verbs: []string{
 			"create", "delete", "get", "list", "patch", "update", "watch",
