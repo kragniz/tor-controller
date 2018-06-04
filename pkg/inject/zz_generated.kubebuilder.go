@@ -59,39 +59,6 @@ func init() {
 	})
 	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
 		APIGroups: []string{
-			"rbac.authorization.k8s.io",
-		},
-		Resources: []string{
-			"roles",
-		},
-		Verbs: []string{
-			"create", "delete", "get", "list", "patch", "update", "watch",
-		},
-	})
-	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
-		APIGroups: []string{
-			"rbac.authorization.k8s.io",
-		},
-		Resources: []string{
-			"rolebindings",
-		},
-		Verbs: []string{
-			"create", "delete", "get", "list", "patch", "update", "watch",
-		},
-	})
-	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
-		APIGroups: []string{
-			"",
-		},
-		Resources: []string{
-			"events",
-		},
-		Verbs: []string{
-			"create", "delete", "get", "list", "patch", "update", "watch",
-		},
-	})
-	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
-		APIGroups: []string{
 			"",
 		},
 		Resources: []string{
@@ -140,6 +107,39 @@ func init() {
 		},
 		Resources: []string{
 			"serviceaccounts",
+		},
+		Verbs: []string{
+			"create", "delete", "get", "list", "patch", "update", "watch",
+		},
+	})
+	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
+		APIGroups: []string{
+			"rbac.authorization.k8s.io",
+		},
+		Resources: []string{
+			"roles",
+		},
+		Verbs: []string{
+			"create", "delete", "get", "list", "patch", "update", "watch",
+		},
+	})
+	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
+		APIGroups: []string{
+			"rbac.authorization.k8s.io",
+		},
+		Resources: []string{
+			"rolebindings",
+		},
+		Verbs: []string{
+			"create", "delete", "get", "list", "patch", "update", "watch",
+		},
+	})
+	Injector.PolicyRules = append(Injector.PolicyRules, rbacv1.PolicyRule{
+		APIGroups: []string{
+			"",
+		},
+		Resources: []string{
+			"events",
 		},
 		Verbs: []string{
 			"create", "delete", "get", "list", "patch", "update", "watch",

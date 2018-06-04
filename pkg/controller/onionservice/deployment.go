@@ -86,7 +86,7 @@ func torDeployment(onion *torv1alpha1.OnionService) *appsv1.Deployment {
 	volumes := []corev1.Volume{}
 	volumeMounts := []corev1.VolumeMount{}
 
-	if onion.Spec.PrivateKeySecret != nil {
+	if onion.Spec.PrivateKeySecret != (torv1alpha1.SecretReference{}) {
 		volumes = []corev1.Volume{
 			{
 				Name: privateKeyVolume,

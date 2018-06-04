@@ -103,7 +103,9 @@ var (
 													Format: "int32",
 												},
 											},
-										},
+											Required: []string{
+												"publicPort",
+											}},
 									},
 								},
 								"privateKeySecret": v1beta1.JSONSchemaProps{
@@ -126,7 +128,9 @@ var (
 									Enum:   []v1beta1.JSON{v1beta1.JSON{[]byte{48}}, v1beta1.JSON{[]byte{50}}, v1beta1.JSON{[]byte{51}}},
 								},
 							},
-						},
+							Required: []string{
+								"version",
+							}},
 						"status": v1beta1.JSONSchemaProps{
 							Type: "object",
 							Properties: map[string]v1beta1.JSONSchemaProps{
@@ -137,7 +141,10 @@ var (
 									Type: "string",
 								},
 							},
-						},
+							Required: []string{
+								"hostname",
+								"targetClusterIP",
+							}},
 					},
 				},
 			},
