@@ -13,11 +13,13 @@ type OnionServiceSpec struct {
 
 	Selector map[string]string `json:"selector,omitempty"`
 
-	PrivateKeySecret SecretReference `json:"privateKeySecret"`
+	// +optional
+	PrivateKeySecret *SecretReference `json:"privateKeySecret,omitempty"`
 
 	// +kubebuilder:validation:Enum=0,2,3
 	Version int32 `json:"version"`
 
+	// +optional
 	ExtraConfig string `json:"extraConfig,omitempty"`
 }
 

@@ -68,13 +68,43 @@ func (bc *OnionServiceController) reconcileDeployment(onionService *torv1alpha1.
 
 func deploymentEqual(a, b *appsv1.Deployment) bool {
 	// TODO: actually detect differences
-	return true
+	return false
 }
 
 func torDeployment(onion *torv1alpha1.OnionService) *appsv1.Deployment {
 	labels := map[string]string{
 		"app":        "tor",
 		"controller": onion.Name,
+	}
+
+	privateKeyMountPath := "/run/tor/service/hs_ed25519_secret_key"
+	if onion.Spec.GetVersion() == 2 {
+		privateKeyMountPath = "/run/tor/service/private_key"
+	}
+
+	// allow not specifying a private key
+	volumes := []corev1.Volume{}
+	volumeMounts := []corev1.VolumeMount{}
+
+	if onion.Spec.PrivateKeySecret != nil {
+		volumes = []corev1.Volume{
+			{
+				Name: privateKeyVolume,
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: onion.Spec.PrivateKeySecret.Name,
+					},
+				},
+			},
+		}
+
+		volumeMounts = []corev1.VolumeMount{
+			{
+				Name:      privateKeyVolume,
+				MountPath: privateKeyMountPath,
+				SubPath:   onion.Spec.PrivateKeySecret.Key,
+			},
+		}
 	}
 
 	return &appsv1.Deployment{
@@ -111,25 +141,10 @@ func torDeployment(onion *torv1alpha1.OnionService) *appsv1.Deployment {
 							},
 							ImagePullPolicy: "IfNotPresent",
 
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      privateKeyVolume,
-									MountPath: "/run/tor/service/private_key",
-									SubPath:   onion.Spec.PrivateKeySecret.Key,
-								},
-							},
+							VolumeMounts: volumeMounts,
 						},
 					},
-					Volumes: []corev1.Volume{
-						{
-							Name: privateKeyVolume,
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: onion.Spec.PrivateKeySecret.Name,
-								},
-							},
-						},
-					},
+					Volumes: volumes,
 				},
 			},
 		},
