@@ -101,7 +101,7 @@ func torDeployment(onion *torv1alpha1.OnionService) *appsv1.Deployment {
 					Containers: []corev1.Container{
 						{
 							Name:  "tor",
-							Image: "kragniz/tor-daemon:latest",
+							Image: "quay.io/kragniz/tor-daemon-manager:master",
 							Args: []string{
 								"-name",
 								onion.Name,

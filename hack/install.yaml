@@ -19,6 +19,18 @@ metadata:
   name: tor-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
   - apps
   resources:
   - deployments
@@ -45,7 +57,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - configmaps
+  - secrets
   verbs:
   - get
   - list
@@ -57,7 +69,31 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - secrets
+  - serviceaccounts
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - rbac
+  resources:
+  - roles
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - rbac
+  resources:
+  - rolebindings
   verbs:
   - get
   - list
@@ -213,7 +249,7 @@ spec:
         - --install-crds=false
         command:
         - /root/controller-manager
-        image: kragniz/tor-controller-manager:latest
+        image: quay.io/kragniz/tor-controller-manager:master
         name: controller-manager
         resources:
           limits:
