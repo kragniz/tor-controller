@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -39,9 +38,6 @@ type LocalManager struct {
 
 	stopCh chan struct{}
 
-	convergeStopCh chan struct{}
-	convergeWG     sync.WaitGroup
-
 	daemon tordaemon.Tor
 
 	// controller loop
@@ -50,10 +46,9 @@ type LocalManager struct {
 
 func New(config *rest.Config) *LocalManager {
 	t := &LocalManager{
-		restConfig:     config,
-		stopCh:         make(chan struct{}),
-		convergeStopCh: make(chan struct{}),
-		daemon:         tordaemon.Tor{},
+		restConfig: config,
+		stopCh:     make(chan struct{}),
+		daemon:     tordaemon.Tor{},
 	}
 	return t
 }
@@ -84,16 +79,15 @@ func (m *LocalManager) Run() error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	m.daemon.SetContext(ctx)
 
-	// start tor daemon
-	m.daemon.Start(ctx)
+	os.Chmod("/run/tor/service", 0700)
 
 	// start watching for API server events that trigger applies
 	m.watchForNotifications()
 
 	// Wait for all goroutines to exit
 	<-m.stopCh
-	m.convergeWG.Wait()
 
 	return nil
 }
@@ -123,7 +117,7 @@ func (m *LocalManager) watchForNotifications() {
 	// whenever the cache is updated, the pod key is added to the workqueue.
 	// Note that when we finally process the item from the workqueue, we might see a newer version
 	// of the Pod than the version which was responsible for triggering the update.
-	indexer, informer := cache.NewIndexerInformer(onionListWatcher, &v1alpha1.OnionService{}, 0, cache.ResourceEventHandlerFuncs{
+	indexer, informer := cache.NewIndexerInformer(onionListWatcher, &v1alpha1.OnionService{}, time.Second*10, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
@@ -162,22 +156,12 @@ func (m *LocalManager) signalHandler(ch chan os.Signal) {
 			case syscall.SIGHUP:
 				fmt.Println("received SIGHUP")
 
-				// if the tor process is still running, kill and wait before re-converging
-				fmt.Println("terminating tor if existing")
-				close(m.convergeStopCh)
-				m.convergeWG.Wait()
-
-				// create new converge stop channel and run converge
-				m.convergeStopCh = make(chan struct{})
-
 			case syscall.SIGINT:
 				fmt.Println("received SIGINT")
-				close(m.convergeStopCh)
 				close(m.stopCh)
 
 			case syscall.SIGTERM:
 				fmt.Println("received SIGTERM")
-				close(m.convergeStopCh)
 				close(m.stopCh)
 			}
 		}

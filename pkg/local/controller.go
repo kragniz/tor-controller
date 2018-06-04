@@ -3,6 +3,8 @@ package local
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -54,22 +56,61 @@ func (c *Controller) sync(key string) error {
 	} else {
 		onionService := obj.(*v1alpha1.OnionService)
 
-		fmt.Printf("updating onion config for %s/%s\n", onionService.Namespace, onionService.Name)
-
 		torConfig, err := config.TorConfigForService(onionService)
 		if err != nil {
 			fmt.Printf("Generating config failed with %v\n", err)
 			return err
 		}
 
-		err = ioutil.WriteFile("/run/tor/torfile", []byte(torConfig), 0644)
-		if err != nil {
-			fmt.Printf("Writing config failed with %v\n", err)
+		reload := false
+
+		torfile, err := ioutil.ReadFile("/run/tor/torfile")
+		if os.IsNotExist(err) {
+			reload = true
+		} else if err != nil {
 			return err
 		}
 
-		c.localManager.daemon.Reload()
+		if string(torfile) != torConfig {
+			reload = true
+		}
 
+		if reload {
+			fmt.Printf("updating onion config for %s/%s\n", onionService.Namespace, onionService.Name)
+
+			err = ioutil.WriteFile("/run/tor/torfile", []byte(torConfig), 0644)
+			if err != nil {
+				fmt.Printf("Writing config failed with %v\n", err)
+				return err
+			}
+
+			c.localManager.daemon.Reload()
+		}
+
+		err = c.updateOnionServiceStatus(onionService)
+		if err != nil {
+			fmt.Printf("Updating status failed with %v\n", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Controller) updateOnionServiceStatus(onionService *v1alpha1.OnionService) error {
+	hostname, err := ioutil.ReadFile("/run/tor/service/hostname")
+	if err != nil {
+		fmt.Printf("Got this error when trying to find hostname: %v", err)
+		hostname = []byte("")
+	}
+
+	newHostname := strings.TrimSpace(string(hostname))
+
+	if newHostname != onionService.Status.Hostname {
+		onionServiceCopy := onionService.DeepCopy()
+		onionServiceCopy.Status.Hostname = newHostname
+
+		_, err = c.localManager.clientset.TorV1alpha1().OnionServices(onionService.Namespace).Update(onionServiceCopy)
+		return err
 	}
 	return nil
 }
