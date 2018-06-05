@@ -6,11 +6,19 @@
 
 [![Build Status](https://img.shields.io/travis-ci/kragniz/tor-controller.svg?style=flat-square)](https://travis-ci.org/kragniz/tor-controller)
 
-Sprinkle some onions on your kubernetes clusters.
+Tor is an anonymity network that provides:
+
+- privacy
+- enhanced tamperproofing
+- freedom from network surveillance
+- NAT traversal
 
 tor-controller allows you to create `OnionService` resources in kubernetes.
-These services are used similarly to standard kubernetes services, but they serve
-traffic on the tor network.
+These services are used similarly to standard kubernetes services, but they
+only serve traffic on the tor network (available on `.onion` addresses).
+
+See [this page](https://www.torproject.org/docs/onion-services.html.en) for
+more information about onion services.
 
 tor-controller creates the following resources for each OnionService:
 
