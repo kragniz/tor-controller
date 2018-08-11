@@ -65,11 +65,23 @@ type OnionServiceStatus struct {
 
 // OnionService
 // +k8s:openapi-gen=true
-// +kubebuilder:resource:path=onionservices
 type OnionService struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   OnionServiceSpec   `json:"spec,omitempty"`
 	Status OnionServiceStatus `json:"status,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// OnionServiceList contains a list of OnionService
+type OnionServiceList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []OnionService `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&OnionService{}, &OnionServiceList{})
 }
