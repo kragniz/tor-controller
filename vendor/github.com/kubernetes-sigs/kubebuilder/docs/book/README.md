@@ -1,8 +1,6 @@
-{% panel style="info", title="Under Development" %}
-This book is being actively developed.
-{% endpanel %}
-
 **Note:** Impatient readers head straight to [Quick Start](quick_start.md).
+
+*To share this book use the icons in the top-right of the menu.*
 
 ## Who is this for
 
@@ -38,6 +36,14 @@ Including:
     - Garbage Collection vs Finalizers
     - How to use Declarative vs Webhook Validation
     - How to implement API versioning
+
+## Resources
+
+GitBook: [book.kubebuilder.com](http://book.kubebuilder.com)
+GitHub Repo: [kubernetes-sigs/kubebuilder](https://github.com/kubernetes-sigs/kubebuilder)
+Slack channel: [#kubeuilder](http://slack.k8s.io/#kubebuilder)
+Google Group: [kubebuilder@googlegroups.com](https://groups.google.com/forum/#!forum/kubebuilder)
+Planned Work: [Sprint Dashboard](https://github.com/kubernetes-sigs/kubebuilder/projects/1)
 
 ## Navigating this book
 

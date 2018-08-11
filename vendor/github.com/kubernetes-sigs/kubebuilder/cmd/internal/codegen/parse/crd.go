@@ -77,7 +77,17 @@ func (b *APIs) parseCRDs() {
 
 					if HasCategories(resource.Type) {
 						categoriesTag := getCategoriesTag(resource.Type)
-						resource.CRD.Spec.Names.Categories = strings.Split(categoriesTag, ",")
+						categories := strings.Split(categoriesTag, ",")
+						resource.CRD.Spec.Names.Categories = categories
+						resource.Categories = categories
+					}
+
+					if HasStatusSubresource(resource.Type) {
+						subresources := &v1beta1.CustomResourceSubresources{
+							Status: &v1beta1.CustomResourceSubresourceStatus{},
+						}
+						resource.CRD.Spec.Subresources = subresources
+						resource.HasStatusSubresource = true
 					}
 
 					if len(resource.ShortName) > 0 {
@@ -148,8 +158,9 @@ var jsonRegex = regexp.MustCompile("json:\"([a-zA-Z,]+)\"")
 
 type primitiveTemplateArgs struct {
 	v1beta1.JSONSchemaProps
-	Value  string
-	Format string
+	Value     string
+	Format    string
+	EnumValue string // TODO check type of enum value to match the type of field
 }
 
 var primitiveTemplate = template.Must(template.New("map-template").Parse(
@@ -173,6 +184,15 @@ var primitiveTemplate = template.Must(template.New("map-template").Parse(
     {{ if .Format -}}
     Format: "{{ .Format }}",
     {{ end -}}
+    {{ if .EnumValue -}}
+    Enum: {{ .EnumValue }},
+    {{ end -}}
+    {{ if .MaxLength -}}
+    MaxLength: getInt({{ .MaxLength }}),
+    {{ end -}}
+    {{ if .MinLength -}}
+    MinLength: getInt({{ .MinLength }}),
+    {{ end -}}
 }`))
 
 // parsePrimitiveValidation returns a JSONSchemaProps object and its
@@ -187,7 +207,7 @@ func (b *APIs) parsePrimitiveValidation(t *types.Type, found sets.String, commen
 
 	buff := &bytes.Buffer{}
 
-	var n, f string
+	var n, f, s string
 	switch t.Name.Name {
 	case "int", "int64", "uint64":
 		n = "integer"
@@ -208,15 +228,19 @@ func (b *APIs) parsePrimitiveValidation(t *types.Type, found sets.String, commen
 	default:
 		n = t.Name.Name
 	}
-	if err := primitiveTemplate.Execute(buff, primitiveTemplateArgs{props, n, f}); err != nil {
+	if props.Enum != nil {
+		s = parseEnumToString(props.Enum)
+	}
+	if err := primitiveTemplate.Execute(buff, primitiveTemplateArgs{props, n, f, s}); err != nil {
 		log.Fatalf("%v", err)
 	}
-
+	props.Type = n
+	props.Format = f
 	return props, buff.String()
 }
 
 type mapTempateArgs struct {
-	Result string
+	Result            string
 	SkipMapValidation bool
 }
 
@@ -236,7 +260,7 @@ func (b *APIs) parseMapValidation(t *types.Type, found sets.String, comments []s
 	props := v1beta1.JSONSchemaProps{
 		Type: "object",
 	}
-    parseOption := b.arguments.CustomArgs.(*ParseOptions)
+	parseOption := b.arguments.CustomArgs.(*ParseOptions)
 	if !parseOption.SkipMapValidation {
 		props.AdditionalProperties = &v1beta1.JSONSchemaPropsOrBool{
 			Allows: true,
@@ -252,11 +276,30 @@ func (b *APIs) parseMapValidation(t *types.Type, found sets.String, comments []s
 
 var arrayTemplate = template.Must(template.New("array-template").Parse(
 	`v1beta1.JSONSchemaProps{
-    Type:                 "array",
+    Type:                 "{{.Type}}",
+    {{ if .Format -}}
+    Format: "{{.Format}}",
+    {{ end -}}
+    {{ if .MaxItems -}}
+    MaxItems: getInt({{ .MaxItems }}),
+    {{ end -}}
+    {{ if .MinItems -}}
+    MinItems: getInt({{ .MinItems }}),
+    {{ end -}}
+    {{ if .UniqueItems -}}
+    UniqueItems: {{ .UniqueItems }},
+    {{ end -}}
+    {{ if .Items -}}
     Items: &v1beta1.JSONSchemaPropsOrArray{
-        Schema: &{{.}},
+        Schema: &{{.ItemsSchema}},
     },
+    {{ end -}}
 }`))
+
+type arrayTemplateArgs struct {
+	v1beta1.JSONSchemaProps
+	ItemsSchema string
+}
 
 // parseArrayValidation returns a JSONSchemaProps object and its serialization in
 // Go that describe the validations for the given array type.
@@ -266,9 +309,18 @@ func (b *APIs) parseArrayValidation(t *types.Type, found sets.String, comments [
 		Type:  "array",
 		Items: &v1beta1.JSONSchemaPropsOrArray{Schema: &items},
 	}
-
+	// To represent byte arrays in the generated code, the property of the OpenAPI definition
+	// should have string as its type and byte as its format.
+	if t.Name.Name == "[]byte" {
+		props.Type = "string"
+		props.Format = "byte"
+		props.Items = nil
+	}
+	for _, l := range comments {
+		getValidation(l, &props)
+	}
 	buff := &bytes.Buffer{}
-	if err := arrayTemplate.Execute(buff, result); err != nil {
+	if err := arrayTemplate.Execute(buff, arrayTemplateArgs{props, result}); err != nil {
 		log.Fatalf("%v", err)
 	}
 	return props, buff.String()
@@ -276,7 +328,8 @@ func (b *APIs) parseArrayValidation(t *types.Type, found sets.String, comments [
 
 type objectTemplateArgs struct {
 	v1beta1.JSONSchemaProps
-	Fields map[string]string
+	Fields   map[string]string
+	Required []string
 }
 
 var objectTemplate = template.Must(template.New("object-template").Parse(
@@ -287,6 +340,11 @@ var objectTemplate = template.Must(template.New("object-template").Parse(
         "{{ $k }}": {{ $v }},
         {{ end -}}
     },
+    {{if .Required}}Required: []string{
+        {{ range $k, $v := .Required -}}
+        "{{ $v }}", 
+        {{ end -}}
+    },{{ end -}}
 }`))
 
 // parseObjectValidation returns a JSONSchemaProps object and its serialization in
@@ -298,19 +356,20 @@ func (b *APIs) parseObjectValidation(t *types.Type, found sets.String, comments 
 	}
 
 	if strings.HasPrefix(t.Name.String(), "k8s.io/api") {
-		if err := objectTemplate.Execute(buff, objectTemplateArgs{props, nil}); err != nil {
+		if err := objectTemplate.Execute(buff, objectTemplateArgs{props, nil, nil}); err != nil {
 			log.Fatalf("%v", err)
 		}
 	} else {
-		m, result := b.getMembers(t, found)
+		m, result, required := b.getMembers(t, found)
 		props.Properties = m
+		props.Required = required
 
 		// Only add field validation for non-inlined fields
 		for _, l := range comments {
 			getValidation(l, &props)
 		}
 
-		if err := objectTemplate.Execute(buff, objectTemplateArgs{props, result}); err != nil {
+		if err := objectTemplate.Execute(buff, objectTemplateArgs{props, result, required}); err != nil {
 			log.Fatalf("%v", err)
 		}
 	}
@@ -380,28 +439,34 @@ func getValidation(comment string, props *v1beta1.JSONSchemaProps) {
 	case "Pattern":
 		props.Pattern = parts[1]
 	case "MaxItems":
-		i, err := strconv.Atoi(parts[1])
-		v := int64(i)
-		if err != nil {
-			log.Fatalf("Could not parse int from %s: %v", comment, err)
-			return
+		if props.Type == "array" {
+			i, err := strconv.Atoi(parts[1])
+			v := int64(i)
+			if err != nil {
+				log.Fatalf("Could not parse int from %s: %v", comment, err)
+				return
+			}
+			props.MaxItems = &v
 		}
-		props.MaxItems = &v
 	case "MinItems":
-		i, err := strconv.Atoi(parts[1])
-		v := int64(i)
-		if err != nil {
-			log.Fatalf("Could not parse int from %s: %v", comment, err)
-			return
+		if props.Type == "array" {
+			i, err := strconv.Atoi(parts[1])
+			v := int64(i)
+			if err != nil {
+				log.Fatalf("Could not parse int from %s: %v", comment, err)
+				return
+			}
+			props.MinItems = &v
 		}
-		props.MinItems = &v
 	case "UniqueItems":
-		b, err := strconv.ParseBool(parts[1])
-		if err != nil {
-			log.Fatalf("Could not parse bool from %s: %v", comment, err)
-			return
+		if props.Type == "array" {
+			b, err := strconv.ParseBool(parts[1])
+			if err != nil {
+				log.Fatalf("Could not parse bool from %s: %v", comment, err)
+				return
+			}
+			props.UniqueItems = b
 		}
-		props.ExclusiveMinimum = b
 	case "MultipleOf":
 		f, err := strconv.ParseFloat(parts[1], 64)
 		if err != nil {
@@ -410,9 +475,13 @@ func getValidation(comment string, props *v1beta1.JSONSchemaProps) {
 		}
 		props.MultipleOf = &f
 	case "Enum":
-		enums := strings.Split(parts[1], ",")
-		for i := range enums {
-			props.Enum = append(props.Enum, v1beta1.JSON{[]byte(enums[i])})
+		if props.Type != "array" {
+			value := strings.Split(parts[1], ",")
+			enums := []v1beta1.JSON{}
+			for _, s := range value {
+				checkType(props, s, &enums)
+			}
+			props.Enum = enums
 		}
 	case "Format":
 		props.Format = parts[1]
@@ -423,15 +492,16 @@ func getValidation(comment string, props *v1beta1.JSONSchemaProps) {
 
 // getMembers builds maps by field name of the JSONSchemaProps and their Go
 // serializations.
-func (b *APIs) getMembers(t *types.Type, found sets.String) (map[string]v1beta1.JSONSchemaProps, map[string]string) {
+func (b *APIs) getMembers(t *types.Type, found sets.String) (map[string]v1beta1.JSONSchemaProps, map[string]string, []string) {
 	members := map[string]v1beta1.JSONSchemaProps{}
 	result := map[string]string{}
+	required := []string{}
 
 	// Don't allow recursion until we support it through refs
 	// TODO: Support recursion
 	if found.Has(t.Name.String()) {
 		fmt.Printf("Breaking recursion for type %s", t.Name.String())
-		return members, result
+		return members, result, required
 	}
 	found.Insert(t.Name.String())
 
@@ -454,22 +524,26 @@ func (b *APIs) getMembers(t *types.Type, found sets.String) (map[string]v1beta1.
 
 		// Inline "inline" structs
 		if strat == "inline" {
-			m, r := b.getMembers(member.Type, found)
+			m, r, re := b.getMembers(member.Type, found)
 			for n, v := range m {
 				members[n] = v
 			}
 			for n, v := range r {
 				result[n] = v
 			}
+			required = append(required, re...)
 		} else {
 			m, r := b.typeToJSONSchemaProps(member.Type, found, member.CommentLines)
 			members[name] = m
 			result[name] = r
+			if !strings.HasSuffix(strat, "omitempty") {
+				required = append(required, name)
+			}
 		}
 	}
 
 	defer found.Delete(t.Name.String())
-	return members, result
+	return members, result, required
 }
 
 // getCategoriesTag returns the value of the +kubebuilder:categories tags
