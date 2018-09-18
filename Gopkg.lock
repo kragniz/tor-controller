@@ -142,7 +142,6 @@
 [[projects]]
   name = "github.com/kubernetes-sigs/kubebuilder"
   packages = [
-    "pkg/config",
     "pkg/controller",
     "pkg/controller/eventhandlers",
     "pkg/controller/informers",
@@ -152,7 +151,6 @@
     "pkg/inject/args",
     "pkg/inject/run",
     "pkg/install",
-    "pkg/signals",
     "pkg/test"
   ]
   revision = "9c4c6c213a8d17f8c21cf4f1aa9cefb99fbbf5ca"
@@ -713,6 +711,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bd538046116ad46000be97174e472f44dc8b8fc3db1da57a55a1a2375f7cd87e"
+  inputs-digest = "b2b8b2b371f8c3b5d364a595e4e28d28ccf97c72c4d465b07e6c7641baa6210d"
   solver-name = "gps-cdcl"
   solver-version = 1
